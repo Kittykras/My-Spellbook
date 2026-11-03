@@ -1,0 +1,684 @@
+// Colors
+$parchment: #f5ecdd;
+$paper: #fff9ee;
+$ink: #38251d;
+$text-muted: #786052;
+$border: #d5c0a3;
+$accent: #722c29;
+$gold: #aa8056;
+$error: #8b3030;
+
+// Typography
+$font-body: "Crimson Pro", serif;
+$font-heading: "Cormorant Garamond", serif;
+
+// Breakpoints
+$mobile: 576px;
+
+// Assets
+$select-arrow: 'data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 9L12 15L18 9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/></svg>';
+
+// Mixins
+@mixin mobile {
+  @media (max-width: $mobile) {
+    @content;
+  }
+}
+
+@mixin reset-appearance {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+@mixin field-label {
+  display: block;
+  padding: 0 0 12px;
+  font-weight: bold;
+  color: $ink;
+  font-size: 15px;
+}
+
+@mixin form-field {
+  width: 100%;
+  background-color: $paper;
+  border: 1px solid $border;
+  height: 52px;
+  padding: 16px;
+  color: $ink;
+  border-radius: 6px;
+  font-family: $font-body;
+  font-size: 1rem;
+  vertical-align: top;
+  text-overflow: ellipsis;
+
+  &:disabled {
+    pointer-events: none;
+    opacity: 0.35;
+  }
+}
+
+@mixin select-field {
+  @include reset-appearance;
+
+  width: 100%;
+  padding: 16px 35px 16px 16px;
+  background-image: url($select-arrow);
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 20px;
+  cursor: pointer;
+}
+
+@mixin small-button($font-size: 15px, $font-weight: bold) {
+  background-color: $paper;
+  border: 1px solid $border;
+  height: 34px;
+  padding: 9px 12px;
+  font-family: $font-body;
+  color: $ink;
+  font-size: $font-size;
+  border-radius: 6px;
+  font-weight: $font-weight;
+  cursor: pointer;
+}
+
+// Base
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0 0 100px;
+  font-family: $font-body;
+  background-color: $parchment;
+}
+
+main {
+  max-width: 1104px;
+  margin: 0 auto;
+  padding: 0 30px;
+
+  @include mobile {
+    padding: 0 15px;
+  }
+}
+
+// Header
+header {
+  max-width: 275px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 80px 0 34px;
+
+  h1 {
+    font-family: $font-heading;
+    padding: 0 0 24px;
+    border-bottom: 1px solid $gold;
+    margin: 0 0 21px;
+    font-size: 50px;
+    color: $ink;
+    position: relative;
+
+    &::before {
+      content: "✧";
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background-color: $parchment;
+      font-size: 24px;
+      font-weight: 400;
+      color: $gold;
+      position: absolute;
+      top: calc(100% - 20px);
+      left: calc(50% - 20px);
+    }
+  }
+
+  p {
+    margin: 0;
+    color: $text-muted;
+    font-size: 18px;
+    font-style: italic;
+  }
+}
+
+.small-btn {
+  @include small-button;
+}
+
+// Tabs
+.tabs {
+  border-bottom: 1px solid $border;
+  margin-bottom: 41px;
+}
+
+.tab-btn {
+  font-family: $font-body;
+  font-size: 17px;
+  color: $text-muted;
+  background-color: transparent;
+  border-width: 0 0 3px;
+  border-style: solid;
+  border-color: transparent;
+  padding: 11px 15px;
+  margin-bottom: -1px;
+  cursor: pointer;
+
+  &.active {
+    color: $accent;
+    font-weight: bold;
+    border-color: $accent;
+  }
+}
+
+// Search and filters
+.filter-spells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+  margin: 0 0 48px;
+
+  label {
+    @include field-label;
+  }
+
+  input,
+  select {
+    @include form-field;
+  }
+
+  input {
+    &::placeholder {
+      color: $text-muted;
+    }
+  }
+
+  select {
+    @include select-field;
+  }
+}
+
+.spell-search {
+  flex: 1 0 0%;
+}
+
+.spell-level {
+  flex: 0 0 auto;
+  width: 24.3%;
+
+  @include mobile {
+    width: 100%;
+  }
+}
+
+// Spell list
+.spell-list {
+  h2 {
+    font-size: 24px;
+    margin: 0 0 9px;
+    color: $ink;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    span {
+      display: inline-flex;
+      gap: 15px;
+    }
+  }
+
+  p {
+    font-size: 15px;
+    margin: 0 0 22px;
+    color: $text-muted;
+  }
+}
+
+.reset-sort-by {
+  @include small-button(13px, 600);
+}
+
+.toggle-add-spell {
+  @include small-button;
+}
+
+.spell-list-table {
+  background-color: $paper;
+  border: 1px solid $border;
+  text-align: left;
+  border-radius: 8px;
+  padding: 0 24px;
+
+  @include mobile {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  tr {
+    &:not(:last-child) td,
+    th {
+      border-bottom: 1px solid $border;
+    }
+  }
+
+  th {
+    color: $text-muted;
+    font-size: 13px;
+    padding: 0;
+
+    button {
+      @include reset-appearance;
+      width: 100%;
+      background-color: transparent;
+      border: none;
+      color: $text-muted;
+      font-size: 13px;
+      line-height: 14px;
+      font-weight: bold;
+      padding: 19px 0;
+      font-family: $font-body;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      gap: 5px;
+      align-items: flex-start;
+      justify-content: left;
+
+      @include mobile {
+        padding: 19px 10px;
+      }
+
+      span {
+        font-size: 11px;
+        line-height: 1;
+        font-weight: bold;
+      }
+    }
+
+    &:not(:first-child) button {
+      padding: 19px 10px;
+    }
+
+    &:last-child button {
+      text-align: center;
+      justify-content: center;
+
+      @include mobile {
+        padding: 19px 5px;
+      }
+    }
+  }
+
+  td {
+    padding: 15px 0;
+  }
+
+  .name {
+    padding-right: 10px;
+  }
+
+  .name,
+  th:first-child {
+    @include mobile {
+      width: 55%;
+      max-width: 55%;
+    }
+  }
+
+  .level {
+    span {
+      background-color: $parchment;
+      border: 1px solid $border;
+      color: $ink;
+      border-radius: 5px;
+      padding: 9px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+    }
+  }
+
+  .favorite {
+    text-align: center;
+  }
+}
+
+.spell-details-toggle {
+  @include reset-appearance;
+
+  background-color: transparent;
+  border: none;
+  color: $accent;
+  font-family: $font-body;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 0 10px 0 0;
+  cursor: pointer;
+  min-height: 34px;
+  width: 100%;
+  text-align: left;
+
+  @include mobile {
+    padding: 0 0 0 10px;
+    max-width: 180px;
+  }
+
+  .minus {
+    margin-left: 30px;
+  }
+}
+
+.favorite-btn {
+  @include reset-appearance;
+
+  text-align: center;
+  color: $gold;
+  font-size: 27px;
+  background-color: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.empty-spellbook {
+  color: $text-muted;
+}
+
+// Spell details
+.spell-details {
+  padding: 5px 16px 30px;
+
+  p {
+    color: $text-muted;
+    margin: 0 0 15px;
+  }
+
+  .spell-desc,
+  .higher-lvl-desc {
+    font-size: 18px;
+    line-height: 25px;
+  }
+
+  h3 {
+    color: $accent;
+    font-size: 17px;
+    margin: 0 0 15px;
+  }
+
+  .error {
+    font-style: italic;
+    color: $error;
+  }
+
+  .small-btn {
+    background-color: $parchment;
+  }
+}
+
+.spell-info {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 32px;
+  row-gap: 0;
+
+  > div {
+    @include mobile {
+      width: calc(50% - 16px);
+    }
+  }
+
+  .label {
+    color: $accent;
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .value {
+    font-size: 17px;
+  }
+}
+
+.spell-material {
+  font-size: 12px;
+  font-style: italic;
+}
+
+.loading {
+  font-style: italic;
+}
+
+// Custom spell form
+.custom-spell-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+
+  .input-wrapper {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+    @include mobile {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+  }
+
+  .checkbox-wrapper {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    label {
+      padding: 0;
+    }
+  }
+
+  label,
+  legend {
+    @include field-label;
+
+    span {
+      color: $error;
+    }
+  }
+
+  input[type="text"],
+  select,
+  textarea {
+    @include form-field;
+  }
+
+  input[type="checkbox"] {
+    @include reset-appearance;
+    width: 20px;
+    height: 20px;
+    border: 1px solid $border;
+    background-color: $paper;
+    border-radius: 4px;
+    margin: 0;
+    cursor: pointer;
+    &:checked, &[checked] {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%2338251d' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+    }
+  }
+
+  select {
+    @include select-field;
+  }
+
+  textarea {
+    height: 88px;
+  }
+
+  .higher-lvls-textarea {
+    height: 52px;
+  }
+
+  fieldset {
+    position: relative;
+    border: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .checkbox-group {
+    display: inline-flex;
+    gap: 5px;
+    vertical-align: middle;
+    input {
+      position: absolute;
+      clip: rect(0, 0, 0, 0);
+      pointer-events: none;
+      margin: 0;
+      width: auto;
+      border: none;
+      height: auto;
+      &:checked, &[checked] {
+        + label {
+          background-color: $gold;
+          color: white;
+        }
+      }
+    }
+    label {
+      @include small-button;
+      width: 52px;
+      height: 52px;
+      font-size: 1rem;
+      line-height: 26px;
+      padding: 12px;
+      text-align: center;
+    }
+  }
+
+  .select-classes-btn {
+    @include form-field;
+    text-align: left;
+    font-weight: 400;
+    color: #757575;
+    &.selected-classes {
+      color: $ink;
+    }
+  }
+
+  .select-classes-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: $paper;
+    border: 1px solid $border;
+    border-radius: 6px;
+    padding: 9px 15px;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 4px 0;
+
+      label {
+        padding: 0;
+      }
+    }
+  }
+
+  button {
+    @include small-button;
+  }
+
+  @include mobile {
+    .button-wrapper {
+      justify-content: space-between;
+    }
+  }
+}
+
+.button-wrapper {
+  display: flex;
+  gap: 15px;
+}
+
+.custom-spell-dialog {
+  background-color: $parchment;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 24px;
+  width: min(600px, calc(100% - 30px));
+  max-height: calc(100dvh - 30px);
+  overflow-y: auto;
+
+  &::backdrop {
+    background-color: rgb(56 37 29 / 50%);
+  }
+
+  .dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 15px;
+  }
+
+  .custom-spell-title {
+    font-size: 24px;
+    margin: 0;
+    color: $ink;
+  }
+
+  .close-dialog {
+    @include small-button;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: transparent;
+    border-color: transparent;
+    width: 34px;
+    height: 34px;
+    position: relative;
+    &:hover {
+      border-color: $border;
+    }
+    &:before,
+    &:after {
+      position: absolute;
+      left: 15px;
+      top: 4px;
+      content: " ";
+      height: 25px;
+      width: 2px;
+      background-color: $ink;
+    }
+    &:before {
+      transform: rotate(45deg);
+    }
+    &:after {
+      transform: rotate(-45deg);
+    }
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
