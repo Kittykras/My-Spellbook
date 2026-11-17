@@ -25,3 +25,18 @@ export async function getSpellDetailsFromAPI(index: string): Promise<SpellDetail
   const result: SpellDetails = await response.json();
   return result;
 }
+
+export async function getSpellsByClassFromAPI(classIndex: string) {
+  const url = `https://www.dnd5eapi.co/api/2024/classes/${classIndex}/spells`;
+  const response = await fetch(url);
+  if (response.status === 404) {
+    return null;
+  }
+  
+  if (!response.ok) {
+    throw new Error(`Response status: ${response.status}`);
+  }
+
+  const result: SpellListResponse = await response.json();
+  return result.results;
+}

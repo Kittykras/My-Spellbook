@@ -2,19 +2,29 @@ import type { RefObject } from "react";
 import CustomSpellForm from "./CustomSpellForm";
 import type { CustomSpell, CustomSpellInput } from "../types/spell";
 
-export default function CustomSpellFormDialog({
-  dialogRef,
-  onSaveSpell,
-  onEditSpell,
-  spellLevels,
-  editingSpell
-}: {
+type CustomSpellFormDialogProps = {
   dialogRef: RefObject<HTMLDialogElement | null>;
   onSaveSpell: (spell: CustomSpellInput) => void;
   onEditSpell: (index: string, input: CustomSpellInput) => void;
   spellLevels: number[];
+  spellClasses: string[];
   editingSpell: CustomSpell | null;
-}) {
+  formVersion: number;
+  onDeleteSpell: (index: string) => void;
+}
+
+export default function CustomSpellFormDialog({
+  dialogRef,
+  onSaveSpell,
+  onEditSpell,
+  onDeleteSpell,
+  spellLevels,
+  spellClasses,
+  editingSpell,
+  formVersion
+}: 
+  CustomSpellFormDialogProps
+) {
   return (
     <dialog
       ref={dialogRef}
@@ -24,7 +34,7 @@ export default function CustomSpellFormDialog({
     >
       <div className="dialog-header">
         <h2 id="custom-spell-title" className="custom-spell-title">
-          Add custom spell
+          {editingSpell ? "Edit custom spell" : "Add custom spell"}
         </h2>
         <button
           type="button"
@@ -35,10 +45,13 @@ export default function CustomSpellFormDialog({
         </button>
       </div>
       <CustomSpellForm
+        key={formVersion}
         editingSpell={editingSpell}
         onSaveSpell={onSaveSpell}
         onEditSpell={onEditSpell}
+        onDeleteSpell={onDeleteSpell}
         spellLevels={spellLevels}
+        spellClasses={spellClasses}
         closeDialog={() => dialogRef.current?.close()}
       />
     </dialog>

@@ -1,6 +1,20 @@
 import type { CustomSpell, Spell, SpellDetails } from "../types/spell";
-import type { Dispatch, RefObject, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import SpellDetailsContent from "./SpellDetailsContent";
+
+type SpellItemProps = {
+  spell: Spell;
+  toggleFavorite: (index: string) => void;
+  spellDetails: SpellDetails | undefined;
+  getSpellDetails: (index: string) => Promise<void>;
+  isLoadingDetails: boolean;
+  detailsError: string;
+  expandedSpellIndex: string | null;
+  setExpandedSpellIndex: Dispatch<SetStateAction<string | null>>;
+  openCustomSpellDialog: (spell: CustomSpell) => void;
+  onDeleteSpell: (index: string) => void;
+  hasActiveCharacter: boolean | undefined;
+};
 
 export default function SpellItem({
   spell,
@@ -12,17 +26,9 @@ export default function SpellItem({
   expandedSpellIndex,
   setExpandedSpellIndex,
   openCustomSpellDialog,
-}: {
-  spell: Spell;
-  toggleFavorite: (index: string) => void;
-  spellDetails: SpellDetails | undefined;
-  getSpellDetails: (index: string) => Promise<void>;
-  isLoadingDetails: boolean;
-  detailsError: string;
-  expandedSpellIndex: string | null;
-  setExpandedSpellIndex: Dispatch<SetStateAction<string | null>>;
-  openCustomSpellDialog: (spell: CustomSpell) => void;
-}) {
+  onDeleteSpell,
+  hasActiveCharacter,
+}: SpellItemProps) {
   const isExpanded = expandedSpellIndex === spell.index;
 
   function toggleSpellDetails(index: string) {
@@ -34,6 +40,13 @@ export default function SpellItem({
       }
       setExpandedSpellIndex(index);
     }
+  }
+
+  function handleDelete() {
+    const confirmed = window.confirm(`Delete "${spell.name}"?`);
+    if (!confirmed) return;
+
+    onDeleteSpell(spell.index);
   }
 
   return (
@@ -58,10 +71,18 @@ export default function SpellItem({
           <button
             className="favorite-btn"
             onClick={() => toggleFavorite(spell.index)}
+            disabled={!hasActiveCharacter}
             aria-label={
-              spell.isFavorite
-                ? `Remove ${spell.name} from favorites`
-                : `Add ${spell.name} to favorites`
+              !hasActiveCharacter
+                ? `Create a character to save ${spell.name} to favorites`
+                : spell.isFavorite
+                  ? `Remove ${spell.name} from favorites`
+                  : `Add ${spell.name} to favorites`
+            }
+            title={
+              !hasActiveCharacter
+                ? "Create a character to save favorite spells"
+                : undefined
             }
           >
             {spell.isFavorite ? "★" : "☆"}
@@ -83,7 +104,11 @@ export default function SpellItem({
                     >
                       Edit spell
                     </button>
-                    <button type="button" className="small-btn">
+                    <button
+                      type="button"
+                      className="small-btn"
+                      onClick={handleDelete}
+                    >
                       Delete spell
                     </button>
                   </div>

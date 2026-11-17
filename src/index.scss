@@ -13,7 +13,8 @@ $font-body: "Crimson Pro", serif;
 $font-heading: "Cormorant Garamond", serif;
 
 // Breakpoints
-$mobile: 576px;
+$mobile: 640px;
+$tablet: 992px;
 
 // Assets
 $select-arrow: 'data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 9L12 15L18 9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/></svg>';
@@ -21,6 +22,12 @@ $select-arrow: 'data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0
 // Mixins
 @mixin mobile {
   @media (max-width: $mobile) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: $tablet) {
     @content;
   }
 }
@@ -65,7 +72,7 @@ $select-arrow: 'data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0
   padding: 16px 35px 16px 16px;
   background-image: url($select-arrow);
   background-repeat: no-repeat;
-  background-position: right 16px center;
+  background-position: right 12px center;
   background-size: 20px;
   cursor: pointer;
 }
@@ -73,7 +80,7 @@ $select-arrow: 'data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0
 @mixin small-button($font-size: 15px, $font-weight: bold) {
   background-color: $paper;
   border: 1px solid $border;
-  height: 34px;
+  min-height: 34px;
   padding: 9px 12px;
   font-family: $font-body;
   color: $ink;
@@ -81,6 +88,62 @@ $select-arrow: 'data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0
   border-radius: 6px;
   font-weight: $font-weight;
   cursor: pointer;
+}
+
+@mixin dialog {
+  background-color: $parchment;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 24px;
+  width: min(600px, calc(100% - 30px));
+  max-height: calc(100dvh - 30px);
+  overflow-y: auto;
+
+  &::backdrop {
+    background-color: rgb(56 37 29 / 50%);
+  }
+
+  .dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 15px;
+
+    h2 {
+      font-size: 24px;
+      margin: 0;
+      color: $ink;
+    }
+  }
+
+  .close-dialog {
+    @include small-button;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: transparent;
+    border-color: transparent;
+    width: 34px;
+    height: 34px;
+    position: relative;
+    &:hover {
+      border-color: $border;
+    }
+    &:before,
+    &:after {
+      position: absolute;
+      left: 15px;
+      top: 4px;
+      content: " ";
+      height: 25px;
+      width: 2px;
+      background-color: $ink;
+    }
+    &:before {
+      transform: rotate(45deg);
+    }
+    &:after {
+      transform: rotate(-45deg);
+    }
+  }
 }
 
 // Base
@@ -95,7 +158,7 @@ body {
 }
 
 main {
-  max-width: 1104px;
+  max-width: 1164px;
   margin: 0 auto;
   padding: 0 30px;
 
@@ -178,7 +241,7 @@ header {
 .filter-spells {
   display: flex;
   flex-wrap: wrap;
-  gap: 36px;
+  gap: 30px;
   margin: 0 0 48px;
 
   label {
@@ -205,9 +268,10 @@ header {
   flex: 1 0 0%;
 }
 
-.spell-level {
+.spell-level,
+.spell-class {
   flex: 0 0 auto;
-  width: 24.3%;
+  width: calc(25% - 30px);
 
   @include mobile {
     width: 100%;
@@ -234,6 +298,11 @@ header {
     font-size: 15px;
     margin: 0 0 22px;
     color: $text-muted;
+  }
+
+  .error {
+    font-style: italic;
+    color: $error;
   }
 }
 
@@ -392,10 +461,18 @@ header {
   height: 34px;
   padding: 0;
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 .empty-spellbook {
   color: $text-muted;
+  display: flex;
+  gap: 30px;
+  align-items: center;
 }
 
 // Spell details
@@ -411,6 +488,13 @@ header {
   .higher-lvl-desc {
     font-size: 18px;
     line-height: 25px;
+    white-space: pre-line;
+  }
+
+  .spell-material {
+    font-size: 14px;
+    line-height: 24px;
+    font-style: italic;
   }
 
   h3 {
@@ -426,6 +510,10 @@ header {
 
   .small-btn {
     background-color: $parchment;
+  }
+
+  .button-wrapper {
+    margin-top: 20px;
   }
 }
 
@@ -453,13 +541,13 @@ header {
   }
 }
 
-.spell-material {
-  font-size: 12px;
+.loading {
   font-style: italic;
 }
 
-.loading {
-  font-style: italic;
+.notice {
+  color: $text-muted;
+  font-style: normal;
 }
 
 // Custom spell form
@@ -510,7 +598,7 @@ header {
     border-radius: 4px;
     margin: 0;
     cursor: pointer;
-    &:checked, &[checked] {
+    &:checked {
       background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%2338251d' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
     }
   }
@@ -546,7 +634,7 @@ header {
       width: auto;
       border: none;
       height: auto;
-      &:checked, &[checked] {
+      &:checked {
         + label {
           background-color: $gold;
           color: white;
@@ -616,59 +704,7 @@ header {
 }
 
 .custom-spell-dialog {
-  background-color: $parchment;
-  border: 1px solid $border;
-  border-radius: 8px;
-  padding: 24px;
-  width: min(600px, calc(100% - 30px));
-  max-height: calc(100dvh - 30px);
-  overflow-y: auto;
-
-  &::backdrop {
-    background-color: rgb(56 37 29 / 50%);
-  }
-
-  .dialog-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0 0 15px;
-  }
-
-  .custom-spell-title {
-    font-size: 24px;
-    margin: 0;
-    color: $ink;
-  }
-
-  .close-dialog {
-    @include small-button;
-    font-family: Arial, Helvetica, sans-serif;
-    background-color: transparent;
-    border-color: transparent;
-    width: 34px;
-    height: 34px;
-    position: relative;
-    &:hover {
-      border-color: $border;
-    }
-    &:before,
-    &:after {
-      position: absolute;
-      left: 15px;
-      top: 4px;
-      content: " ";
-      height: 25px;
-      width: 2px;
-      background-color: $ink;
-    }
-    &:before {
-      transform: rotate(45deg);
-    }
-    &:after {
-      transform: rotate(-45deg);
-    }
-  }
+  @include dialog;
 }
 
 .sr-only {
@@ -681,4 +717,539 @@ header {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+.character-select {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  align-items: center;
+  margin-bottom: 4px;
+
+  label {
+    @include field-label;
+    padding: 0;
+  }
+
+  select {
+    @include form-field;
+    @include select-field;
+    @include small-button;
+    font-weight: 600;
+    flex: 0 0 auto;
+    width: auto;
+    padding-right: 35px;
+    background-position-x: right 8px;
+  }
+
+  .edit-character-btn {
+    @include small-button;
+    padding: 5px;
+    width: 34px;
+  }
+}
+
+.add-character-dialog {
+  @include dialog;
+
+  .add-character-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    label,
+    legend {
+      @include field-label;
+
+      span {
+        color: $error;
+      }
+    }
+
+    input[type="text"],
+    select,
+    textarea {
+      @include form-field;
+    }
+
+    button {
+      @include small-button;
+    }
+
+    @include mobile {
+      .button-wrapper {
+        justify-content: space-between;
+      }
+    }
+  }
+}
+
+.spell-view-controls {
+  display: flex;
+  margin-bottom: 15px;
+  align-items: center;
+  justify-content: space-between;
+
+  &:empty {
+    margin: 0;
+  }
+
+  .print-n-view {
+    margin-left: auto;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .list-view,
+  .grid-view {
+    @include small-button;
+    padding: 5px;
+    width: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &.active {
+      border-color: $accent;
+      background-color: $accent;
+      color: $paper;
+    }
+  }
+
+  .list-view {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-right: -1px;
+  }
+
+  .grid-view {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
+
+.spell-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2.17%;
+
+  @include tablet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include mobile {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+.spell-card-wrapper {
+  min-height: 0;
+}
+
+.spell-card {
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 240/336;
+  background: linear-gradient(
+    to bottom,
+    $gold 0 115px,
+    $paper 115px calc(100% - 17px),
+    $gold calc(100% - 17px) 100%
+  );
+  border: 4px solid $gold;
+  border-radius: 11px;
+  position: relative;
+  overflow: hidden;
+
+  > * {
+    flex-shrink: 0;
+  }
+
+  .spell-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    padding: 0 30px;
+    background-color: $paper;
+
+    h4 {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      line-height: 28px;
+      margin: 0;
+      color: $accent;
+      font-size: 24px;
+      text-align: center;
+    }
+
+    .favorite-btn {
+      width: 28px;
+      height: 28px;
+      font-size: 23px;
+      line-height: 28px;
+      flex-shrink: 0;
+      position: absolute;
+      right: 5px;
+      top: 0;
+    }
+  }
+
+  .spell-level {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    color: $text-muted;
+    margin-bottom: 0;
+    font-size: 12px;
+    line-height: 1.1;
+    background-color: $gold;
+    color: $paper;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .spell-info {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-bottom: 4px solid $gold;
+    background-color: $gold;
+    gap: 2px;
+    margin-bottom: 0;
+    > div {
+      padding: 5px;
+      background-color: $paper;
+      border: 0;
+      text-align: center;
+      width: 100%;
+    }
+    .label {
+      font-size: 10px;
+    }
+    .value {
+      font-size: 12px;
+      color: $ink;
+    }
+    p {
+      margin: 0;
+    }
+  }
+
+  .spell-tags {
+    font-size: 12px;
+    margin-bottom: 0;
+    padding: 0 5px;
+  }
+
+  p {
+    font-size: 12px;
+    line-height: 1.1;
+    margin-bottom: 5px;
+  }
+
+  .spell-card-body {
+    flex: 1 1 0;
+    min-height: 0;
+    --description-size: 12px;
+    padding: 0 5px 0;
+    margin: 5px 0 5px;
+  }
+
+  .spell-card-body-content {
+    display: flow-root;
+
+    p {
+      font-size: var(--description-size);
+      line-height: 1.1;
+      margin: 0 0 5px;
+      white-space: pre-line;
+    }
+
+    .higher-lvl-title,
+    .spell-material {
+      font-size: calc(var(--description-size) * 0.86);
+      line-height: 1.1;
+    }
+
+    .higher-lvl-title {
+      line-height: 1.5;
+    }
+
+    > :last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .spell-desc,
+  .higher-lvl-desc {
+    color: $ink;
+  }
+
+  .higher-lvl-title {
+    color: $accent;
+    margin: 0 0 2px;
+    text-transform: capitalize;
+    border-bottom: 1px solid $border;
+  }
+
+  .spell-material {
+    font-style: italic;
+  }
+
+  .spell-classes {
+    margin: auto 0 0;
+    background-color: $gold;
+    padding: 4px 5px 0;
+    color: $paper;
+    font-size: 12px;
+    line-height: 1.1;
+    position: relative;
+    z-index: 1;
+  }
+
+  .spell-card-components,
+  .spell-card-casting-time,
+  .spell-card-duration,
+  .spell-card-range {
+    position: relative;
+
+    .ritual,
+    .concentration {
+      background-color: $accent;
+      color: $paper;
+      font-size: 10px;
+      font-weight: bold;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      right: 5px;
+      width: 14px;
+      height: 14px;
+      line-height: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-box-trim: trim-both;
+      text-box-edge: cap alphabetic;
+    }
+    .ritual {
+      left: 5px;
+    }
+  }
+}
+
+.spell-card-warning {
+  margin: 5px 0 0;
+  text-align: center;
+  padding: 5px;
+  font-size: 12px;
+  line-height: 1.1;
+  color: $error;
+
+  .small-btn {
+    display: block;
+    margin: 5px auto 0;
+  }
+}
+
+.card-text-editor {
+  label {
+    @include field-label;
+  }
+
+  textarea {
+    @include form-field;
+    height: 88px;
+    margin-bottom: 12px;
+  }
+
+  button {
+    @include small-button;
+  }
+}
+
+.card-text-dialog {
+  @include dialog;
+}
+
+@page {
+  size: auto;
+  margin: 0;
+}
+
+@media print {
+  body {
+    margin: 0;
+    background-color: white;
+  }
+
+  main {
+    max-width: 100%;
+    padding: 0;
+    width: 100%;
+    margin: 0;
+    background-color: white;
+  }
+
+  header {
+    display: none;
+  }
+
+  .spell-view-controls,
+  .filter-spells,
+  .tabs,
+  .add-character-dialog,
+  .custom-spell-dialog,
+  .toggle-add-spell,
+  .reset-sort-by,
+  .character-select,
+  .spell-list h2,
+  .spell-list > p {
+    display: none;
+  }
+
+  .spell-card-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    row-gap: 2mm;
+    column-gap: 0;
+  }
+
+  .spell-card-wrapper {
+    flex: 0 0 auto;
+    width: 2.5in;
+    min-width: 2.5in;
+    margin: 0.01in;
+    break-inside: avoid;
+    .favorite-btn {
+      display: none;
+    }
+    .spell-card {
+      width: 100%;
+      height: 3.5in;
+    }
+  }
+
+  .spell-card-warning, .card-text-editor {
+    display: none;
+  }
+
+  .spell-print-preview {
+    border: none !important;
+    .print-controls,
+    .print-instructions {
+      display: none !important;
+    }
+  }
+
+  .spell-print-sheet[data-paper-size="a5"]
+    + .spell-print-sheet[data-paper-size="a5"] {
+    break-before: page;
+  }
+}
+
+.spell-print-preview {
+  padding: 2mm;
+  width: 198mm;
+  margin: 1mm auto;
+  background-color: white;
+  border: 1px solid $border;
+  border-radius: 0.05in;
+  &[data-paper-size="a4"] {
+    width: 198mm;
+  }
+  &[data-paper-size="a5"] {
+    width: 296mm;
+    .spell-print-sheet {
+      display: flex;
+      flex-wrap: wrap;
+      row-gap: 0;
+      column-gap: 0;
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        border-left: 1px dashed #999;
+        pointer-events: none;
+      }
+      .spell-print-half {
+        width: 50%;
+      }
+    }
+  }
+
+  .print-controls {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .small-btn {
+      min-width: 140px;
+    }
+  }
+
+  .print-paper-size-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+
+    label {
+      @include field-label;
+      padding: 0;
+      margin: 0;
+    }
+
+    select {
+      @include form-field;
+      @include select-field;
+      @include small-button;
+      font-weight: 600;
+      flex: 0 0 auto;
+      width: auto;
+      padding-right: 35px;
+      background-position-x: right 8px;
+    }
+  }
+
+  .spell-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 2.5in);
+    row-gap: 2mm;
+    column-gap: 0;
+    justify-content: space-around;
+  }
+
+  .spell-card-wrapper {
+    flex: 0 0 auto;
+    width: 2.5in;
+    min-width: 2.5in;
+    margin: 0.01in;
+    break-inside: avoid;
+    .favorite-btn {
+      display: none;
+    }
+    .spell-card {
+      width: 100%;
+      height: 3.5in;
+    }
+  }
+
+  .print-instructions {
+    font-size: 12px;
+    line-height: 1.1;
+    margin: 24px 0 0;
+    color: $text-muted;
+    text-align: center;
+  }
 }

@@ -1,28 +1,39 @@
-import { useState, useEffect, useRef } from "react";
-import { getSpellsFromAPI, getSpellDetailsFromAPI } from "./api/request";
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  getSpellsFromAPI,
+  getSpellDetailsFromAPI,
+  getSpellsByClassFromAPI,
+} from "./api/request";
 import type {
   Spell,
   SpellDetails,
   CustomSpellInput,
   CustomSpell,
   ApiSpellItem,
+  Character,
 } from "./types/spell";
 import Header from "./components/Header";
 import Search from "./components/Search";
 import SpellList from "./components/SpellList";
 import Tabs from "./components/Tabs";
 import "./App.css";
+import CharacterSelect from "./components/CharacterSelect";
 
 function App() {
   const [spells, setSpells] = useState<Spell[]>([]);
+  const [classSpellIds, setClassSpellIds] = useState<string[]>([]);
   const [spellDetails, setSpellDetails] = useState<SpellDetails>();
   const [searchtext, setSearchtext] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("all");
+  const [selectedClass, setSelectedClass] = useState("all");
   const [activeTab, setActiveTab] = useState("All spells");
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState("");
   const [isLoadingSpells, setIsLoadingSpells] = useState(true);
   const [spellsError, setSpellsError] = useState("");
+  const [isLoadingSpellsByClass, setIsLoadingSpellsByClass] = useState(false);
+  const [spellsByClassError, setSpellsByClassError] = useState("");
+  const [spellsByClassNotice, setSpellsByClassNotice] = useState("");
   const [sortBy, setSortBy] = useState("relevance");
   const [sortDirection, setSortDirection] = useState("asc");
   const [customSpells, setCustomSpells] = useState<CustomSpell[]>(() => {
@@ -30,11 +41,85 @@ function App() {
 
     return savedSpells ? JSON.parse(savedSpells) : [];
   });
+  const [characters, setCharacters] = useState<Character[]>(() => {
+    const savedCharacters = localStorage.getItem("spellbook-characters");
+
+    if (savedCharacters) {
+      return JSON.parse(savedCharacters);
+    }
+
+    const savedFavoriteIds: string[] = JSON.parse(
+      localStorage.getItem("spellbook-favorites") ?? "[]",
+    );
+
+    const customFavoriteIds = customSpells
+      .filter((spell) => spell.isFavorite)
+      .map((spell) => spell.index);
+
+    return [
+      {
+        id: "clara",
+        name: "Clara",
+        favoriteSpellIds: [
+          ...new Set([...savedFavoriteIds, ...customFavoriteIds]),
+        ],
+      },
+    ];
+  });
+  const [activeCharacterId, setActiveCharacterId] = useState(
+    characters[0]?.id ?? "",
+  );
+  const [spellDetailsByIndex, setSpellDetailsByIndex] = useState<
+    Record<string, SpellDetails>
+  >({});
+  const [detailsLoadingByIndex, setDetailsLoadingByIndex] = useState<
+    Record<string, boolean>
+  >({});
+
+  const [detailsErrorByIndex, setDetailsErrorByIndex] = useState<
+    Record<string, string>
+  >({});
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
+  const [paperSize, setPaperSize] = useState<"a4" | "a5">("a4");
   const latestDetailsRequest = useRef(0);
+  const latestClassSpellsRequest = useRef(0);
+  const requestedSpellDetails = useRef(new Set<string>());
+
+  const activeCharacter = characters.find(
+    (character) => character.id === activeCharacterId,
+  );
 
   const spellLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-  const allSpells: Spell[] = [...spells, ...customSpells];
+  const spellClasses = [
+    "Artificer",
+    "Bard",
+    "Cleric",
+    "Druid",
+    "Paladin",
+    "Ranger",
+    "Sorcerer",
+    "Warlock",
+    "Wizard",
+  ];
+
+  const classAbbreviations: Record<string, string> = {
+    Artificer: "Art",
+    Bard: "Brd",
+    Cleric: "Clr",
+    Druid: "Drd",
+    Paladin: "Pal",
+    Ranger: "Rgr",
+    Sorcerer: "Sor",
+    Warlock: "Wlk",
+    Wizard: "Wiz",
+  };
+
+  const allSpells: Spell[] = [...spells, ...customSpells].map((spell) => ({
+    ...spell,
+    isFavorite:
+      activeCharacter?.favoriteSpellIds.includes(spell.index) ?? false,
+  }));
 
   const savedFavorites: string[] = JSON.parse(
     localStorage.getItem("spellbook-favorites") ?? "[]",
@@ -64,7 +149,13 @@ function App() {
       const matchesLevel =
         selectedLevel === "all" || spell.level === Number(selectedLevel);
 
-      return matchesSearch && matchesLevel;
+      const matchesClass =
+        selectedClass === "all" ||
+        classSpellIds.includes(spell.index) ||
+        (spell.isCustom &&
+          spell.classes.some((name) => name.toLowerCase() === selectedClass));
+
+      return matchesSearch && matchesLevel && matchesClass;
     })
     .sort((a, b) => {
       let finalSort;
@@ -94,7 +185,8 @@ function App() {
     });
 
   const favoriteSpells = filteredSpells.filter((spell) => spell.isFavorite);
-  const hasFavorites = spells.some((spell) => spell.isFavorite);
+  const hasFavorites = allSpells.some((spell) => spell.isFavorite);
+  const favoriteCount = allSpells.filter((spell) => spell.isFavorite).length;
 
   async function getSpells() {
     setIsLoadingSpells(true);
@@ -139,6 +231,79 @@ function App() {
     }
   }
 
+  const loadSpellDetails = useCallback(async (index: string) => {
+    if (requestedSpellDetails.current.has(index)) return;
+
+    requestedSpellDetails.current.add(index);
+
+    setDetailsLoadingByIndex((previous) => ({
+      ...previous,
+      [index]: true,
+    }));
+
+    setDetailsErrorByIndex((previous) => ({
+      ...previous,
+      [index]: "",
+    }));
+
+    try {
+      const result = await getSpellDetailsFromAPI(index);
+
+      setSpellDetailsByIndex((previous) => ({
+        ...previous,
+        [index]: result,
+      }));
+    } catch (error) {
+      requestedSpellDetails.current.delete(index);
+
+      console.error("Failed to load spell details:", error);
+
+      setDetailsErrorByIndex((previous) => ({
+        ...previous,
+        [index]: "Could not load spell details. Please try again.",
+      }));
+    } finally {
+      setDetailsLoadingByIndex((previous) => ({
+        ...previous,
+        [index]: false,
+      }));
+    }
+  }, []);
+
+  async function getSpellsByClass(classIndex: string) {
+    const requestId = ++latestClassSpellsRequest.current;
+    setIsLoadingSpellsByClass(true);
+    setSpellsByClassError("");
+    setSpellsByClassNotice("");
+
+    try {
+      const result = await getSpellsByClassFromAPI(classIndex);
+
+      if (requestId !== latestClassSpellsRequest.current) return;
+
+      if (result === null) {
+        setClassSpellIds([]);
+        setSpellsByClassNotice(
+          "This class isn’t available in the spell database. You can still add your own spells.",
+        );
+        return;
+      }
+
+      setClassSpellIds(result.map((spell) => spell.index));
+    } catch (error) {
+      if (requestId === latestClassSpellsRequest.current) {
+        console.error("Failed to load spells:", error);
+        setSpellsByClassError(
+          "Could not load spells for this class. Please try again.",
+        );
+      }
+    } finally {
+      if (requestId === latestClassSpellsRequest.current) {
+        setIsLoadingSpellsByClass(false);
+      }
+    }
+  }
+
   useEffect(() => {
     getSpells().catch((error: unknown) => {
       console.error("Failed to load spells:", error);
@@ -152,29 +317,25 @@ function App() {
     );
   }, [customSpells]);
 
+  useEffect(() => {
+    localStorage.setItem("spellbook-characters", JSON.stringify(characters));
+  }, [characters]);
+
   function toggleFavorite(index: string) {
-    if (customSpells.some((spell) => spell.index === index)) {
-      setCustomSpells((previousSpells) =>
-        previousSpells.map((spell) =>
-          spell.index === index
-            ? { ...spell, isFavorite: !spell.isFavorite }
-            : spell,
-        ),
-      );
+    setCharacters((previousCharacters) =>
+      previousCharacters.map((character) => {
+        if (character.id !== activeCharacterId) return character;
 
-      return;
-    }
-    const updatedSpells = spells.map((spell) =>
-      spell.index === index
-        ? { ...spell, isFavorite: !spell.isFavorite }
-        : spell,
+        const isFavorite = character.favoriteSpellIds.includes(index);
+
+        return {
+          ...character,
+          favoriteSpellIds: isFavorite
+            ? character.favoriteSpellIds.filter((id) => id !== index)
+            : [...character.favoriteSpellIds, index],
+        };
+      }),
     );
-    setSpells(updatedSpells);
-    const favoriteIds = updatedSpells
-      .filter((spell) => spell.isFavorite)
-      .map((spell) => spell.index);
-
-    localStorage.setItem("spellbook-favorites", JSON.stringify(favoriteIds));
   }
 
   function handleSort(column: "name" | "level" | "favorite" | "relevance") {
@@ -211,53 +372,184 @@ function App() {
     );
   }
 
+  function deleteCustomSpell(index: string) {
+    setCustomSpells((previousSpells) =>
+      previousSpells.filter((spell) => spell.index !== index),
+    );
+  }
+
+  function handleClassChange(classIndex: string) {
+    setSelectedClass(classIndex);
+    setClassSpellIds([]);
+
+    if (classIndex === "all") {
+      latestClassSpellsRequest.current++;
+      setIsLoadingSpellsByClass(false);
+      setSpellsByClassError("");
+      setSpellsByClassNotice("");
+    } else {
+      void getSpellsByClass(classIndex);
+    }
+  }
+
+  function clearSearchAndFilters() {
+    setSearchtext("");
+    setSelectedLevel("all");
+    handleClassChange("all");
+  }
+
+  function addCharacter(name: string) {
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
+
+    const newCharacter: Character = {
+      id: crypto.randomUUID(),
+      name: trimmedName,
+      favoriteSpellIds: [],
+    };
+
+    setCharacters((previousCharacters) => [
+      ...previousCharacters,
+      newCharacter,
+    ]);
+    setActiveCharacterId(newCharacter.id);
+  }
+
+  function renameCharacter(id: string, name: string) {
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
+
+    setCharacters((previousCharacters) =>
+      previousCharacters.map((character) =>
+        character.id === id ? { ...character, name: trimmedName } : character,
+      ),
+    );
+  }
+
+  function deleteCharacter(id: string) {
+    const remainingCharacters = characters.filter(
+      (character) => character.id !== id,
+    );
+
+    setCharacters(remainingCharacters);
+
+    if (activeCharacterId === id) {
+      setActiveCharacterId(remainingCharacters[0]?.id ?? "");
+    }
+  }
+
   return (
     <>
       <Header />
       <main>
+        <CharacterSelect
+          activeCharacterId={activeCharacterId}
+          activeCharacter={activeCharacter}
+          setActiveCharacterId={setActiveCharacterId}
+          characters={characters}
+          onAddCharacter={addCharacter}
+          onRenameCharacter={renameCharacter}
+          onDeleteCharacter={deleteCharacter}
+        />
         <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
         <Search
           spellLevels={spellLevels}
+          spellClasses={spellClasses}
           setSearchtext={setSearchtext}
           setSelectedLevel={setSelectedLevel}
+          setSelectedClass={handleClassChange}
+          searchtext={searchtext}
+          selectedLevel={selectedLevel}
+          selectedClass={selectedClass}
         />
         {activeTab === "All spells" ? (
           <SpellList
+            headline="Explore spells"
+            description="Your spells, all in one place"
             spellDetails={spellDetails}
             getSpellDetails={getSpellDetails}
             isLoadingDetails={isLoadingDetails}
             detailsError={detailsError}
+            loadSpellDetails={loadSpellDetails}
+            spellDetailsByIndex={spellDetailsByIndex}
+            detailsLoadingByIndex={detailsLoadingByIndex}
+            detailsErrorByIndex={detailsErrorByIndex}
             isLoadingSpells={isLoadingSpells}
             spellsError={spellsError}
+            isLoadingSpellsByClass={isLoadingSpellsByClass}
+            spellsByClassError={spellsByClassError}
+            spellsByClassNotice={spellsByClassNotice}
+            selectedClass={selectedClass}
             filteredSpells={filteredSpells}
             toggleFavorite={toggleFavorite}
             handleSort={handleSort}
             sortBy={sortBy}
             sortDirection={sortDirection}
             spellLevels={spellLevels}
+            spellClasses={spellClasses}
             onSaveSpell={addCustomSpell}
             onEditSpell={updateCustomSpell}
+            onDeleteSpell={deleteCustomSpell}
+            hasActiveCharacter={Boolean(activeCharacter)}
+            isSpellbook={false}
+            classAbbreviations={classAbbreviations}
+            showPrintPreview={false}
+            setShowPrintPreview={setShowPrintPreview}
+            paperSize={paperSize}
+            setPaperSize={setPaperSize}
           />
-        ) : isLoadingSpells || spellsError || favoriteSpells.length > 0 ? (
+        ) : characters.length === 0 ? (
+          <p className="empty-spellbook">
+            Create a character to start your spellbook.
+          </p>
+        ) : isLoadingSpells ||
+          spellsError ||
+          (selectedClass !== "all" &&
+            (isLoadingSpellsByClass || spellsByClassError)) ||
+          favoriteSpells.length > 0 ? (
           <SpellList
+            headline={`${activeCharacter?.name}’s spellbook`}
+            description={`${favoriteCount} saved ${
+              favoriteCount === 1 ? "spell" : "spells"
+            } · Your magic, ready at a glance`}
             spellDetails={spellDetails}
             getSpellDetails={getSpellDetails}
             isLoadingDetails={isLoadingDetails}
             detailsError={detailsError}
+            loadSpellDetails={loadSpellDetails}
+            spellDetailsByIndex={spellDetailsByIndex}
+            detailsLoadingByIndex={detailsLoadingByIndex}
+            detailsErrorByIndex={detailsErrorByIndex}
             isLoadingSpells={isLoadingSpells}
             spellsError={spellsError}
+            isLoadingSpellsByClass={isLoadingSpellsByClass}
+            spellsByClassError={spellsByClassError}
+            spellsByClassNotice=""
+            selectedClass={selectedClass}
             filteredSpells={favoriteSpells}
             toggleFavorite={toggleFavorite}
             handleSort={handleSort}
             sortBy={sortBy}
             sortDirection={sortDirection}
             spellLevels={spellLevels}
+            spellClasses={spellClasses}
             onSaveSpell={addCustomSpell}
             onEditSpell={updateCustomSpell}
+            onDeleteSpell={deleteCustomSpell}
+            hasActiveCharacter={Boolean(activeCharacter)}
+            isSpellbook={true}
+            classAbbreviations={classAbbreviations}
+            showPrintPreview={showPrintPreview}
+            setShowPrintPreview={setShowPrintPreview}
+            paperSize={paperSize}
+            setPaperSize={setPaperSize}
           />
         ) : hasFavorites ? (
           <p className="empty-spellbook">
             You have favorites, but none match your search or filters.
+            <button className="small-btn" onClick={clearSearchAndFilters}>
+              Clear search and filters
+            </button>
           </p>
         ) : (
           <p className="empty-spellbook">

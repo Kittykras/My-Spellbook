@@ -79,3 +79,9 @@ export type SpellDetailsView = {
   material?: string;
   higher_level?: string;
 };
+
+export type Character = {
+  id: string;
+  name: string;
+  favoriteSpellIds: string[];
+};

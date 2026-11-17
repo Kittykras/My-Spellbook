@@ -1,20 +1,32 @@
 import { useState, type SubmitEvent } from "react";
 import type { CustomSpell, CustomSpellInput } from "../types/spell";
 
-export default function CustomSpellForm({
-  spellLevels,
-  closeDialog,
-  onSaveSpell,
-  onEditSpell,
-  editingSpell,
-}: {
+type CustomSpellFormProps = {
   spellLevels: number[];
+  spellClasses: string[];
   closeDialog: () => void;
   onSaveSpell: (spell: CustomSpellInput) => void;
   onEditSpell: (index: string, input: CustomSpellInput) => void;
+  onDeleteSpell: (index: string) => void;
   editingSpell: CustomSpell | null;
-}) {
+};
+
+export default function CustomSpellForm({
+  spellLevels,
+  spellClasses,
+  closeDialog,
+  onSaveSpell,
+  onEditSpell,
+  onDeleteSpell,
+  editingSpell,
+}: CustomSpellFormProps) {
   const [classesOpen, setClassesOpen] = useState(false);
+  const [hasVerbalComponent, setHasVerbalComponent] = useState(
+    editingSpell?.components.includes("V") ?? false,
+  );
+  const [hasSomaticComponent, setHasSomaticComponent] = useState(
+    editingSpell?.components.includes("S") ?? false,
+  );
   const [hasMaterialComponent, setHasMaterialComponent] = useState(
     editingSpell?.components.includes("M") ?? false,
   );
@@ -63,10 +75,13 @@ export default function CustomSpellForm({
     if (editingSpell) {
       onEditSpell(editingSpell.index, input);
       closeDialog();
+      return;
     } else {
       onSaveSpell(input);
     }
     formEl.reset();
+    setHasVerbalComponent(false);
+    setHasSomaticComponent(false);
     setHasMaterialComponent(false);
     setClassesOpen(false);
     setSelectedClasses([]);
@@ -83,24 +98,22 @@ export default function CustomSpellForm({
     "Transmutation",
   ];
 
-  const spellClasses = [
-    "Artificer",
-    "Bard",
-    "Cleric",
-    "Druid",
-    "Paladin",
-    "Ranger",
-    "Sorcerer",
-    "Warlock",
-    "Wizard",
-  ];
-
   function handleClassChange(spellClass: string, checked: boolean) {
     setSelectedClasses((previousClasses) =>
       checked
         ? [...previousClasses, spellClass]
         : previousClasses.filter((name) => name !== spellClass),
     );
+  }
+
+  function handleDelete() {
+    if (!editingSpell) return;
+
+    const confirmed = window.confirm(`Delete "${editingSpell.name}"?`);
+    if (!confirmed) return;
+
+    onDeleteSpell(editingSpell.index);
+    closeDialog();
   }
 
   return (
@@ -202,7 +215,10 @@ export default function CustomSpellForm({
               name="custom-spell-components"
               id="custom-spell-components-v"
               value="V"
-              defaultChecked={editingSpell?.components.includes("V") ?? false}
+              checked={hasVerbalComponent}
+              onChange={(event) =>
+                setHasVerbalComponent(event.currentTarget.checked)
+              }
             />
             <label htmlFor="custom-spell-components-v">V</label>
             <input
@@ -210,7 +226,10 @@ export default function CustomSpellForm({
               name="custom-spell-components"
               id="custom-spell-components-s"
               value="S"
-              defaultChecked={editingSpell?.components.includes("S") ?? false}
+              checked={hasSomaticComponent}
+              onChange={(event) =>
+                setHasSomaticComponent(event.currentTarget.checked)
+              }
             />
             <label htmlFor="custom-spell-components-s">S</label>
             <input
@@ -218,7 +237,7 @@ export default function CustomSpellForm({
               name="custom-spell-components"
               id="custom-spell-components-m"
               value="M"
-              defaultChecked={editingSpell?.components.includes("M") ?? false}
+              checked={hasMaterialComponent}
               onChange={(event) =>
                 setHasMaterialComponent(event.currentTarget.checked)
               }
@@ -244,7 +263,7 @@ export default function CustomSpellForm({
             type="checkbox"
             name="custom-spell-concentration"
             id="custom-spell-concentration"
-            defaultChecked={editingSpell?.concentration}
+            checked={editingSpell?.concentration}
           />
           <label htmlFor="custom-spell-concentration">Concentration</label>
         </div>
@@ -253,7 +272,7 @@ export default function CustomSpellForm({
             type="checkbox"
             name="custom-spell-ritual"
             id="custom-spell-ritual"
-            defaultChecked={editingSpell?.ritual}
+            checked={editingSpell?.ritual}
           />
           <label htmlFor="custom-spell-ritual">Ritual</label>
         </div>
@@ -310,7 +329,11 @@ export default function CustomSpellForm({
       </div>
       <div className="button-wrapper">
         <button type="submit">Save spell</button>
-        {editingSpell && <button type="button">Delete spell</button>}
+        {editingSpell && (
+          <button type="button" onClick={handleDelete}>
+            Delete spell
+          </button>
+        )}
         <button type="button" onClick={closeDialog}>
           Cancel
         </button>
