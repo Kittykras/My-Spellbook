@@ -1,4 +1,5 @@
 import type { SpellDetailsView } from "../types/spell";
+import MarkdownContent from "./MarkdownContent";
 
 export default function SpellDetailsContent({
   spellDetails,
@@ -8,8 +9,7 @@ export default function SpellDetailsContent({
   return (
     <>
       <p className="spell-school">
-        {spellDetails.school} ·{" "}
-        {spellDetails.classes.join(", ")}
+        {spellDetails.school} · {spellDetails.classes.join(", ")}
       </p>
       <div className="spell-info">
         <div>
@@ -26,7 +26,10 @@ export default function SpellDetailsContent({
         </div>
         <div>
           <p className="label">COMPONENTS</p>
-          <p className="value">{spellDetails.components.join(", ")} {spellDetails.components.includes("M") ? "*" : ""}</p>
+          <p className="value">
+            {spellDetails.components.join(", ")}{" "}
+            {spellDetails.components.includes("M") ? "*" : ""}
+          </p>
         </div>
       </div>
       <p className="spell-tags">
@@ -34,11 +37,14 @@ export default function SpellDetailsContent({
         &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp; Ritual:{" "}
         {spellDetails.ritual ? "Yes" : "No"}
       </p>
-      <p className="spell-desc">{spellDetails?.description}</p>
+      <MarkdownContent text={spellDetails.description} className="spell-desc" />
       {spellDetails.higher_level && (
         <>
           <h3 className="higher-lvl-title">At higher levels</h3>
-          <p className="higher-lvl-desc">{spellDetails.higher_level}</p>
+          <MarkdownContent
+            text={spellDetails.higher_level}
+            className="higher-lvl-desc"
+          />
         </>
       )}
       {spellDetails.material && (

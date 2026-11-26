@@ -33,7 +33,7 @@ type SpellListProps = {
   isLoadingSpellsByClass: boolean;
   spellsByClassError: string;
   spellsByClassNotice: string;
-  selectedClass: string;
+  selectedClasses: string[];
   spellLevels: number[];
   spellClasses: string[];
   onSaveSpell: (spell: CustomSpellInput) => void;
@@ -69,7 +69,7 @@ export default function SpellList({
   isLoadingSpellsByClass,
   spellsByClassError,
   spellsByClassNotice,
-  selectedClass,
+  selectedClasses,
   spellLevels,
   spellClasses,
   onSaveSpell,
@@ -381,21 +381,21 @@ export default function SpellList({
                     <p className="error">{spellsError}</p>
                   </td>
                 </tr>
-              ) : selectedClass !== "all" && isLoadingSpellsByClass ? (
+              ) : selectedClasses.length > 0 && selectedClasses[0] !== "all" && isLoadingSpellsByClass ? (
                 <tr>
                   <td colSpan={3}>
                     <p className="loading">
-                      Loading spells for {selectedClass}…
+                      Loading spells for {selectedClasses.join(", ")}…
                     </p>
                   </td>
                 </tr>
-              ) : selectedClass !== "all" && spellsByClassError ? (
+              ) : selectedClasses.length > 0 && selectedClasses[0] !== "all" && spellsByClassError ? (
                 <tr>
                   <td colSpan={3}>
                     <p className="error">{spellsByClassError}</p>
                   </td>
                 </tr>
-              ) : selectedClass !== "all" &&
+              ) : selectedClasses.length > 0 && selectedClasses[0] !== "all" &&
                 spellsByClassNotice &&
                 filteredSpells.length === 0 ? (
                 <tr>

@@ -26,7 +26,8 @@ export default function CardTextEditorDialog({
       onClose={() => setEditingCard(null)}
       closedby="any"
     >
-      <div className="dialog-header">
+      <div className="dialog-scroll">
+        <div className="dialog-header">
         <h2 id="card-text-dialog-title" className="add-character-title">
           Edit card text
         </h2>
@@ -37,15 +38,16 @@ export default function CardTextEditorDialog({
         >
           <span className="sr-only">Close dialog</span>
         </button>
+        </div>
+        {editingCard && (
+          <CardTextEditorForm
+            editingCard={editingCard}
+            setEditingCard={setEditingCard}
+            setSavedCardText={setSavedCardText}
+            closeDialog={closeDialog}
+          />
+        )}
       </div>
-      {editingCard && (
-        <CardTextEditorForm
-          editingCard={editingCard}
-          setEditingCard={setEditingCard}
-          setSavedCardText={setSavedCardText}
-          closeDialog={closeDialog}
-        />
-      )}
     </dialog>
   );
 }

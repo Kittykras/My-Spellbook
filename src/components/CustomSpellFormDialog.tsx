@@ -11,7 +11,7 @@ type CustomSpellFormDialogProps = {
   editingSpell: CustomSpell | null;
   formVersion: number;
   onDeleteSpell: (index: string) => void;
-}
+};
 
 export default function CustomSpellFormDialog({
   dialogRef,
@@ -21,10 +21,8 @@ export default function CustomSpellFormDialog({
   spellLevels,
   spellClasses,
   editingSpell,
-  formVersion
-}: 
-  CustomSpellFormDialogProps
-) {
+  formVersion,
+}: CustomSpellFormDialogProps) {
   return (
     <dialog
       ref={dialogRef}
@@ -32,28 +30,30 @@ export default function CustomSpellFormDialog({
       aria-labelledby="custom-spell-title"
       closedby="any"
     >
-      <div className="dialog-header">
-        <h2 id="custom-spell-title" className="custom-spell-title">
-          {editingSpell ? "Edit custom spell" : "Add custom spell"}
-        </h2>
-        <button
-          type="button"
-          className="close-dialog"
-          onClick={() => dialogRef.current?.close()}
-        >
-          <span className="sr-only">Close dialog</span>
-        </button>
+      <div className="dialog-scroll">
+        <div className="dialog-header">
+          <h2 id="custom-spell-title" className="custom-spell-title">
+            {editingSpell ? "Edit custom spell" : "Add custom spell"}
+          </h2>
+          <button
+            type="button"
+            className="close-dialog"
+            onClick={() => dialogRef.current?.close()}
+          >
+            <span className="sr-only">Close dialog</span>
+          </button>
+        </div>
+        <CustomSpellForm
+          key={formVersion}
+          editingSpell={editingSpell}
+          onSaveSpell={onSaveSpell}
+          onEditSpell={onEditSpell}
+          onDeleteSpell={onDeleteSpell}
+          spellLevels={spellLevels}
+          spellClasses={spellClasses}
+          closeDialog={() => dialogRef.current?.close()}
+        />
       </div>
-      <CustomSpellForm
-        key={formVersion}
-        editingSpell={editingSpell}
-        onSaveSpell={onSaveSpell}
-        onEditSpell={onEditSpell}
-        onDeleteSpell={onDeleteSpell}
-        spellLevels={spellLevels}
-        spellClasses={spellClasses}
-        closeDialog={() => dialogRef.current?.close()}
-      />
     </dialog>
   );
 }

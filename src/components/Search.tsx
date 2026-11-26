@@ -1,14 +1,14 @@
-import type { Dispatch, SetStateAction } from "react";
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 
 type SearchProps = {
   spellLevels: number[];
   spellClasses: string[];
   setSearchtext: Dispatch<SetStateAction<string>>;
   setSelectedLevel: Dispatch<SetStateAction<string>>;
-  setSelectedClass: (classIndex: string) => void;
+  setSelectedClasses: (classIndex: string[]) => void;
   searchtext: string;
   selectedLevel: string;
-  selectedClass: string;
+  selectedClasses: string[];
 };
 
 export default function Search({
@@ -16,11 +16,42 @@ export default function Search({
   spellClasses,
   setSearchtext,
   setSelectedLevel,
-  setSelectedClass, 
-  searchtext, 
+  setSelectedClasses,
+  searchtext,
   selectedLevel,
-  selectedClass
+  selectedClasses,
 }: SearchProps) {
+  const [classesOpen, setClassesOpen] = useState(false);
+  const classesRef = useRef<HTMLFieldSetElement>(null);
+
+  useEffect(() => {
+    if (!classesOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        event.target instanceof Node &&
+        classesRef.current &&
+        !classesRef.current.contains(event.target)
+      ) {
+        setClassesOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [classesOpen]);
+
+  function handleClassChange(spellClass: string, checked: boolean) {
+    setSelectedClasses(
+      checked
+        ? [...selectedClasses, spellClass]
+        : selectedClasses.filter((name) => name !== spellClass),
+    );
+  }
+
   return (
     <section className="filter-spells">
       <div className="spell-search">
@@ -49,21 +80,36 @@ export default function Search({
           ))}
         </select>
       </div>
-      <div className="spell-class">
-        <label htmlFor="spell-class">Class</label>
-        <select
-          id="spell-class"
-          value={selectedClass}
-          onChange={(event) => setSelectedClass(event.target.value)}
+      <fieldset className="spell-class" ref={classesRef}>
+        <legend>Class(es)</legend>
+        <button
+          type="button"
+          className={`select-classes-btn ${selectedClasses.length ? "selected-classes" : ""}`}
+          aria-expanded={classesOpen}
+          onClick={() => setClassesOpen((prevOpen) => !prevOpen)}
         >
-          <option value="all">All classes</option>
-          {spellClasses.map((spellclass) => (
-            <option key={spellclass} value={spellclass.toLowerCase()}>
-              {spellclass}
-            </option>
+          {selectedClasses.length > 0
+            ? selectedClasses.join(", ")
+            : "Select classes"}
+        </button>
+        <ul className="select-classes-list" hidden={!classesOpen}>
+          {spellClasses.map((spellClass) => (
+            <li key={spellClass}>
+              <input
+                type="checkbox"
+                name="filter-spell-classes"
+                id={`filter-spell-${spellClass}`}
+                value={spellClass}
+                checked={selectedClasses.includes(spellClass)}
+                onChange={(event) =>
+                  handleClassChange(spellClass, event.target.checked)
+                }
+              />
+              <label htmlFor={`filter-spell-${spellClass}`}>{spellClass}</label>
+            </li>
           ))}
-        </select>
-      </div>
+        </ul>
+      </fieldset>
     </section>
   );
 }

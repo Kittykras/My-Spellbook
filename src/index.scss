@@ -2,7 +2,7 @@
 $parchment: #f5ecdd;
 $paper: #fff9ee;
 $ink: #38251d;
-$text-muted: #786052;
+$muted: #786052;
 $border: #d5c0a3;
 $accent: #722c29;
 $gold: #aa8056;
@@ -77,6 +77,17 @@ $select-arrow: 'data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0
   cursor: pointer;
 }
 
+@mixin field-help {
+  margin: 2px 0 0;
+  color: $muted;
+  font-size: 10px;
+  line-height: 1.1;
+
+  code {
+    font-size: 0.95em;
+  }
+}
+
 @mixin small-button($font-size: 15px, $font-weight: bold) {
   background-color: $paper;
   border: 1px solid $border;
@@ -94,10 +105,34 @@ $select-arrow: 'data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0
   background-color: $parchment;
   border: 1px solid $border;
   border-radius: 8px;
-  padding: 24px;
   width: min(600px, calc(100% - 30px));
-  max-height: calc(100dvh - 30px);
-  overflow-y: auto;
+  padding: 6px;
+  overflow: hidden;
+  max-height: 90dvh;
+
+  .dialog-scroll {
+    max-height: calc(90dvh - 16px);
+    overflow-y: auto;
+    padding: 18px;
+
+    scrollbar-width: thin;
+    scrollbar-color: $gold transparent;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: $parchment;
+      border-radius: 8px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: $gold;
+      border: 2px solid $parchment;
+      border-radius: 8px;
+    }
+  }
 
   &::backdrop {
     background-color: rgb(56 37 29 / 50%);
@@ -146,7 +181,6 @@ $select-arrow: 'data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0
   }
 }
 
-// Base
 * {
   box-sizing: border-box;
 }
@@ -202,7 +236,7 @@ header {
 
   p {
     margin: 0;
-    color: $text-muted;
+    color: $muted;
     font-size: 18px;
     font-style: italic;
   }
@@ -221,7 +255,7 @@ header {
 .tab-btn {
   font-family: $font-body;
   font-size: 17px;
-  color: $text-muted;
+  color: $muted;
   background-color: transparent;
   border-width: 0 0 3px;
   border-style: solid;
@@ -241,10 +275,11 @@ header {
 .filter-spells {
   display: flex;
   flex-wrap: wrap;
-  gap: 30px;
+  gap: 15px;
   margin: 0 0 48px;
 
-  label {
+  label,
+  legend {
     @include field-label;
   }
 
@@ -255,12 +290,69 @@ header {
 
   input {
     &::placeholder {
-      color: $text-muted;
+      color: $muted;
     }
   }
 
   select {
     @include select-field;
+  }
+
+  input[type="checkbox"] {
+    @include reset-appearance;
+    width: 20px;
+    height: 20px;
+    border: 1px solid $border;
+    background-color: $paper;
+    border-radius: 4px;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    &:checked {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%2338251d' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+    }
+  }
+
+  fieldset {
+    position: relative;
+    border: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .select-classes-btn {
+    @include form-field;
+    text-align: left;
+    font-weight: 400;
+    color: #757575;
+    &.selected-classes {
+      color: $ink;
+    }
+  }
+
+  .select-classes-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: $paper;
+    border: 1px solid $border;
+    border-radius: 6px;
+    padding: 9px 15px;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 4px 0;
+
+      label {
+        padding: 0;
+      }
+    }
   }
 }
 
@@ -271,14 +363,13 @@ header {
 .spell-level,
 .spell-class {
   flex: 0 0 auto;
-  width: calc(25% - 30px);
+  width: calc(25% - 15px);
 
   @include mobile {
     width: 100%;
   }
 }
 
-// Spell list
 .spell-list {
   h2 {
     font-size: 24px;
@@ -297,7 +388,11 @@ header {
   p {
     font-size: 15px;
     margin: 0 0 22px;
-    color: $text-muted;
+    color: $muted;
+  }
+
+  .field-help {
+    @include field-help;
   }
 
   .error {
@@ -310,7 +405,8 @@ header {
   @include small-button(13px, 600);
 }
 
-.toggle-add-spell {
+.toggle-add-spell,
+.toggle-add-wild-shape {
   @include small-button;
 }
 
@@ -339,7 +435,7 @@ header {
   }
 
   th {
-    color: $text-muted;
+    color: $muted;
     font-size: 13px;
     padding: 0;
 
@@ -348,7 +444,7 @@ header {
       width: 100%;
       background-color: transparent;
       border: none;
-      color: $text-muted;
+      color: $muted;
       font-size: 13px;
       line-height: 14px;
       font-weight: bold;
@@ -469,7 +565,7 @@ header {
 }
 
 .empty-spellbook {
-  color: $text-muted;
+  color: $muted;
   display: flex;
   gap: 30px;
   align-items: center;
@@ -480,15 +576,33 @@ header {
   padding: 5px 16px 30px;
 
   p {
-    color: $text-muted;
+    color: $muted;
     margin: 0 0 15px;
+  }
+
+  .markdown-content {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    margin-bottom: 15px;
+
+    p {
+      white-space: pre-wrap;
+    }
+
+    > :first-child {
+      margin-top: 0;
+    }
+
+    > :last-child,
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 
   .spell-desc,
   .higher-lvl-desc {
     font-size: 18px;
     line-height: 25px;
-    white-space: pre-line;
   }
 
   .spell-material {
@@ -546,22 +660,49 @@ header {
 }
 
 .notice {
-  color: $text-muted;
+  color: $muted;
   font-style: normal;
 }
 
-// Custom spell form
-.custom-spell-form {
+.custom-spell-form,
+.custom-wild-shape-form {
   display: flex;
   flex-direction: column;
   gap: 15px;
 
   .input-wrapper {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 15px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     @include mobile {
       grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    &-three-in-row {
+      display: grid;
+      gap: 15px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      @include mobile {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+      }
+    }
+
+    &-five-in-row {
+      display: grid;
+      gap: 15px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      @include mobile {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    &-six-in-row {
+      display: grid;
+      gap: 15px;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      @include mobile {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
     }
   }
 
@@ -584,6 +725,7 @@ header {
   }
 
   input[type="text"],
+  input[type="number"],
   select,
   textarea {
     @include form-field;
@@ -735,6 +877,7 @@ header {
     @include form-field;
     @include select-field;
     @include small-button;
+    height: 34px;
     font-weight: 600;
     flex: 0 0 auto;
     width: auto;
@@ -772,6 +915,49 @@ header {
       @include form-field;
     }
 
+    fieldset {
+      position: relative;
+      border: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .select-classes-btn {
+      @include form-field;
+      text-align: left;
+      font-weight: 400;
+      color: #757575;
+      &.selected-classes {
+        color: $ink;
+      }
+    }
+
+    .select-classes-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      position: static;
+      width: 100%;
+      margin-top: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      background-color: $paper;
+      border: 1px solid $border;
+      border-radius: 6px;
+      padding: 9px 15px;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 4px 0;
+
+        label {
+          padding: 0;
+        }
+      }
+    }
+
     button {
       @include small-button;
     }
@@ -784,7 +970,8 @@ header {
   }
 }
 
-.spell-view-controls {
+.spell-view-controls,
+.wild-shape-view-controls {
   display: flex;
   margin-bottom: 15px;
   align-items: center;
@@ -843,7 +1030,8 @@ header {
   }
 }
 
-.spell-card-wrapper {
+.spell-card-wrapper,
+.wild-shape-card-wrapper {
   min-height: 0;
 }
 
@@ -901,7 +1089,7 @@ header {
     display: flex;
     align-items: center;
     width: 100%;
-    color: $text-muted;
+    color: $muted;
     margin-bottom: 0;
     font-size: 12px;
     line-height: 1.1;
@@ -967,14 +1155,14 @@ header {
       white-space: pre-line;
     }
 
-    .higher-lvl-title,
     .spell-material {
       font-size: calc(var(--description-size) * 0.86);
       line-height: 1.1;
     }
 
     .higher-lvl-title {
-      line-height: 1.5;
+      font-size: calc(var(--description-size) + 2px);
+      line-height: 1.25;
     }
 
     > :last-child {
@@ -985,6 +1173,25 @@ header {
   .spell-desc,
   .higher-lvl-desc {
     color: $ink;
+  }
+
+  .markdown-content {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    margin-bottom: 5px;
+
+    p {
+      white-space: pre-wrap;
+    }
+
+    > :first-child {
+      margin-top: 0;
+    }
+
+    > :last-child,
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 
   .higher-lvl-title {
@@ -1111,7 +1318,8 @@ header {
     display: none;
   }
 
-  .spell-card-grid {
+  .spell-card-grid,
+  .wild-shape-card-grid {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
@@ -1119,7 +1327,8 @@ header {
     column-gap: 0;
   }
 
-  .spell-card-wrapper {
+  .spell-card-wrapper,
+  .wild-shape-card-wrapper {
     flex: 0 0 auto;
     width: 2.5in;
     min-width: 2.5in;
@@ -1128,17 +1337,29 @@ header {
     .favorite-btn {
       display: none;
     }
-    .spell-card {
+    .spell-card,
+    .wild-shape-card {
       width: 100%;
       height: 3.5in;
+      .wild-shape-card-header h4 {
+        margin-right: 40px;
+      }
     }
   }
 
-  .spell-card-warning, .card-text-editor {
+  .wild-shape-card {
+    .wild-shape-card-header h4 {
+      margin-right: 40px;
+    }
+  }
+
+  .spell-card-warning,
+  .card-text-editor {
     display: none;
   }
 
-  .spell-print-preview {
+  .spell-print-preview,
+  .wild-shape-print-preview {
     border: none !important;
     .print-controls,
     .print-instructions {
@@ -1152,7 +1373,8 @@ header {
   }
 }
 
-.spell-print-preview {
+.spell-print-preview,
+.wild-shape-print-preview {
   padding: 2mm;
   width: 198mm;
   margin: 1mm auto;
@@ -1164,7 +1386,8 @@ header {
   }
   &[data-paper-size="a5"] {
     width: 296mm;
-    .spell-print-sheet {
+    .spell-print-sheet,
+    .wild-shape-print-sheet {
       display: flex;
       flex-wrap: wrap;
       row-gap: 0;
@@ -1181,7 +1404,8 @@ header {
         border-left: 1px dashed #999;
         pointer-events: none;
       }
-      .spell-print-half {
+      .spell-print-half,
+      .wild-shape-print-half {
         width: 50%;
       }
     }
@@ -1214,6 +1438,8 @@ header {
       @include form-field;
       @include select-field;
       @include small-button;
+      height: 34px;
+      line-height: 16px;
       font-weight: 600;
       flex: 0 0 auto;
       width: auto;
@@ -1222,7 +1448,8 @@ header {
     }
   }
 
-  .spell-card-grid {
+  .spell-card-grid,
+  .wild-shape-card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, 2.5in);
     row-gap: 2mm;
@@ -1230,7 +1457,8 @@ header {
     justify-content: space-around;
   }
 
-  .spell-card-wrapper {
+  .spell-card-wrapper,
+  .wild-shape-card-wrapper {
     flex: 0 0 auto;
     width: 2.5in;
     min-width: 2.5in;
@@ -1239,9 +1467,16 @@ header {
     .favorite-btn {
       display: none;
     }
-    .spell-card {
+    .spell-card,
+    .wild-shape-card {
       width: 100%;
       height: 3.5in;
+    }
+  }
+
+  .wild-shape-card {
+    .wild-shape-card-header h4 {
+      margin-right: 40px;
     }
   }
 
@@ -1249,7 +1484,507 @@ header {
     font-size: 12px;
     line-height: 1.1;
     margin: 24px 0 0;
-    color: $text-muted;
+    color: $muted;
     text-align: center;
+  }
+}
+
+.wild-shape-list {
+  h2 {
+    font-size: 24px;
+    margin: 0 0 9px;
+    color: $ink;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    span {
+      display: inline-flex;
+      gap: 15px;
+    }
+  }
+
+  p {
+    font-size: 15px;
+    margin: 0 0 22px;
+    color: $muted;
+  }
+
+  .field-help {
+    @include field-help;
+  }
+
+  .error {
+    font-style: italic;
+    color: $error;
+  }
+}
+
+.wild-shape-table {
+  background-color: $paper;
+  border: 1px solid $border;
+  text-align: left;
+  border-radius: 8px;
+  padding: 0 24px;
+
+  @include mobile {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  tr {
+    &:not(:last-child) td,
+    th {
+      border-bottom: 1px solid $border;
+    }
+  }
+
+  th {
+    color: $muted;
+    font-size: 13px;
+    padding: 0;
+
+    button {
+      @include reset-appearance;
+      width: 100%;
+      background-color: transparent;
+      border: none;
+      color: $muted;
+      font-size: 13px;
+      line-height: 14px;
+      font-weight: bold;
+      padding: 19px 0;
+      font-family: $font-body;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      gap: 5px;
+      align-items: flex-start;
+      justify-content: left;
+
+      @include mobile {
+        padding: 19px 10px;
+      }
+
+      span {
+        font-size: 11px;
+        line-height: 1;
+        font-weight: bold;
+      }
+    }
+
+    &:not(:first-child) button {
+      padding: 19px 10px;
+    }
+
+    &:last-child button {
+      text-align: center;
+      justify-content: center;
+
+      @include mobile {
+        padding: 19px 5px;
+      }
+    }
+  }
+
+  td {
+    padding: 15px 0;
+  }
+
+  .wild-shape-name {
+    padding-right: 10px;
+    color: $accent;
+    font-size: 18px;
+    line-height: 20px;
+
+    button {
+      @include reset-appearance;
+      background-color: transparent;
+      border: none;
+      color: $accent;
+      font-family: $font-body;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 0 10px 0 0;
+      cursor: pointer;
+      min-height: 34px;
+      width: 100%;
+      text-align: left;
+
+      @include mobile {
+        padding: 0 0 0 10px;
+        max-width: 180px;
+      }
+
+      .minus {
+        margin-left: 30px;
+      }
+    }
+  }
+
+  .wild-shape-cr {
+    color: $ink;
+    font-size: 13px;
+    line-height: 14px;
+    span {
+      background-color: $parchment;
+      border: 1px solid $border;
+      color: $ink;
+      border-radius: 5px;
+      padding: 9px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+    }
+  }
+
+  .wild-shape-name,
+  th:first-child {
+    @include mobile {
+      width: 55%;
+      max-width: 55%;
+    }
+  }
+
+  .wild-shape-favorite {
+    text-align: center;
+  }
+}
+
+.wild-shape-details {
+  padding: 5px 16px 30px;
+
+  .size {
+    font-style: italic;
+    margin-bottom: 15px;
+    line-height: 23px;
+    text-transform: capitalize;
+  }
+
+  .row-two {
+    display: flex;
+    gap: 15px;
+  }
+
+  p {
+    margin-bottom: 15px;
+  }
+
+  .markdown-content {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    margin-bottom: 15px;
+
+    p {
+      white-space: pre-wrap;
+    }
+
+    > :first-child {
+      margin-top: 0;
+    }
+
+    > :last-child,
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .custom-wild-shape-edit-btn {
+    margin-top: 15px;
+  }
+
+  b {
+    color: $accent;
+  }
+
+  .stat-line {
+    &.skills {
+      text-transform: capitalize;
+    }
+  }
+
+  .ability-grid {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    width: 100%;
+    border: 1px solid $border;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 15px;
+
+    @include mobile {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .ability-col {
+      padding: 5px;
+      text-align: center;
+      border-right: 1px solid $border;
+      &:last-child {
+        border-right: none;
+      }
+
+      @include mobile {
+        border-bottom: 1px solid $border;
+        &:nth-child(3n) {
+          border-right: none;
+        }
+        &:last-child,
+        &:nth-child(4n),
+        &:nth-child(5n) {
+          border-bottom: none;
+        }
+      }
+    }
+    .ability-col-top {
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: center;
+      gap: 3px;
+      color: $accent;
+      .label {
+        font-weight: bold;
+      }
+    }
+    .ability-col-mods {
+      align-items: stretch;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: center;
+      gap: 4px;
+      .ability-pill {
+        margin: 0;
+        padding: 2px;
+        background-color: $parchment;
+        border: 1px solid $border;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        width: 100%;
+        .label {
+          color: $muted;
+          font-size: 10px;
+          line-height: 1.2;
+          font-weight: 600;
+        }
+        .value {
+          color: $accent;
+          font-size: 12px;
+          line-height: 1.2;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+  .actions-title,
+  .traits-title {
+    color: $accent;
+    font-size: 17px;
+    line-height: 24px;
+    margin-top: 22px;
+    margin-bottom: 15px;
+  }
+
+  .action,
+  .trait {
+    b {
+      font-style: italic;
+    }
+  }
+}
+
+.custom-wild-shape-dialog {
+  @include dialog;
+}
+
+.wild-shape-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2.17%;
+
+  @include tablet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include mobile {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+.wild-shape-card {
+  aspect-ratio: 240 / 336;
+  background: linear-gradient(
+    to bottom,
+    $gold 0,
+    $gold 86px,
+    $paper 86px,
+    $paper 100%
+  );
+  border: 4px solid $gold;
+  border-radius: 11px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+
+  .wild-shape-card-body {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+
+    p {
+      font-size: var(--description-size, 12px);
+    }
+
+    h3 {
+      font-size: calc(var(--description-size, 12px) + 2px);
+    }
+  }
+
+  .wild-shape-card-header {
+    flex-shrink: 0;
+    background: $paper;
+    position: relative;
+    h4 {
+      color: $accent;
+      font-size: 24px;
+      line-height: 28px;
+      margin: 0 6px 0;
+      margin-right: 70px;
+      white-space: nowrap;
+      min-width: 0;
+    }
+    p {
+      color: $paper;
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.1;
+      font-style: italic;
+    }
+    .size {
+      background-color: $gold;
+      text-align: center;
+      padding: 0 8px;
+      text-transform: capitalize;
+    }
+    .cr {
+      font-style: normal;
+      position: absolute;
+      top: 0;
+      right: 8px;
+      background-color: $gold;
+      color: $paper;
+      z-index: 1;
+      padding: 5px 6px 3px;
+      display: inline-flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      border-bottom-right-radius: 5px;
+      border-bottom-left-radius: 5px;
+      font-size: 10px;
+      line-height: 0.86;
+    }
+    .favorite-btn {
+      position: absolute;
+      top: 0;
+      right: 40px;
+      background: none;
+      border: none;
+      color: $gold;
+      font-size: 24px;
+      cursor: pointer;
+      width: 28px;
+      height: 28px;
+      font-size: 23px;
+      line-height: 28px;
+      flex-shrink: 0;
+    }
+  }
+
+  .wild-shape-card-body {
+    p {
+      margin: 0 0 2px;
+      font-size: var(--description-size, 12px);
+      line-height: 1.1;
+    }
+    .skills {
+      text-transform: capitalize;
+    }
+    .row-two {
+      display: grid;
+      gap: 0;
+      grid-template-columns: 1fr 1fr;
+      background-color: $gold;
+      .stat-line {
+        color: $paper;
+        text-align: center;
+        margin: 0;
+        font-size: 12px;
+      }
+    }
+    .ability-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      background-color: $gold;
+      gap: 2px;
+      .ability-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: $paper;
+        font-size: 10px;
+        padding: 1px 1px 2px;
+        p {
+          font-size: 10px;
+          margin: 0;
+          line-height: 1;
+        }
+        .ability-col-top {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
+          .label {
+            font-size: 9px;
+            line-height: 1;
+            color: $accent;
+            font-weight: 600;
+          }
+          .score {
+            color: $ink;
+            font-weight: 700;
+          }
+        }
+        .ability-col-save {
+          font-size: 9px;
+          color: $muted;
+          display: flex;
+          gap: 2px;
+        }
+      }
+    }
+    .stats {
+      padding: 5px 6px;
+    }
+    h3 {
+      color: $accent;
+      font-size: calc(var(--description-size, 12px) + 2px);
+      line-height: 1.25;
+      margin: 0 0 2px;
+      text-transform: capitalize;
+      border-bottom: 1px solid $gold;
+    }
   }
 }

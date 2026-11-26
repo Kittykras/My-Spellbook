@@ -315,8 +315,13 @@ export default function CustomSpellForm({
           required
           id="custom-spell-desc"
           name="custom-spell-desc"
+          aria-describedby="custom-spell-desc-help"
           defaultValue={editingSpell?.description ?? ""}
         ></textarea>
+        <p id="custom-spell-desc-help" className="field-help">
+          Use <code>**text**</code> for bold, <code>*text*</code> for italic,
+          and a blank line between paragraphs.
+        </p>
       </div>
       <div>
         <label htmlFor="custom-spell-higher-levels">At higher levels</label>
@@ -324,8 +329,13 @@ export default function CustomSpellForm({
           className="higher-lvls-textarea"
           id="custom-spell-higher-levels"
           name="custom-spell-higher-levels"
+          aria-describedby="custom-spell-higher-levels-help"
           defaultValue={editingSpell?.higher_level ?? ""}
         ></textarea>
+        <p id="custom-spell-higher-levels-help" className="field-help">
+          Use <code>**text**</code> for bold, <code>*text*</code> for italic,
+          and a blank line between paragraphs.
+        </p>
       </div>
       <div className="button-wrapper">
         <button type="submit">Save spell</button>

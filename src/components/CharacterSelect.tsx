@@ -1,5 +1,5 @@
 import { useRef, useState, type Dispatch, type SetStateAction } from "react";
-import type { Character } from "../types/spell";
+import type { Character } from "../types/character";
 import AddCharacterDialog from "./AddCharacterDialog";
 
 type CharacterSelectProps = {
@@ -7,8 +7,9 @@ type CharacterSelectProps = {
   activeCharacter: Character | undefined;
   setActiveCharacterId: Dispatch<SetStateAction<string>>;
   characters: Character[];
-  onAddCharacter: (name: string) => void;
-  onRenameCharacter: (id: string, name: string) => void;
+  spellClasses: string[];
+  onAddCharacter: (name: string, classes: string[]) => void;
+  onRenameCharacter: (id: string, name: string, classes: string[]) => void;
   onDeleteCharacter: (id: string) => void;
 };
 
@@ -17,16 +18,18 @@ export default function CharacterSelect({
   activeCharacter,
   setActiveCharacterId,
   characters,
+  spellClasses,
   onAddCharacter,
   onRenameCharacter,
   onDeleteCharacter,
 }: CharacterSelectProps) {
   const characterDialog = useRef<HTMLDialogElement>(null);
   const [editingChar, setEditingChar] = useState<Character | null>(null);
+  const [formVersion, setFormVersion] = useState(0);
 
   function handleCharacterChange(value: string) {
     if (value === "add-character") {
-      characterDialog.current?.showModal();
+      openCharacterDialog();
       return;
     }
 
@@ -36,8 +39,14 @@ export default function CharacterSelect({
   function handleEditCharacter() {
     if (activeCharacter) {
       setEditingChar(activeCharacter);
-      characterDialog.current?.showModal();
+      openCharacterDialog(activeCharacter);
     }
+  }
+
+  function openCharacterDialog(character: Character | null = null) {
+    setEditingChar(character);
+    setFormVersion((version) => version + 1);
+    characterDialog.current?.showModal();
   }
 
   return (
@@ -62,10 +71,13 @@ export default function CharacterSelect({
       </select>
       <AddCharacterDialog
         dialogRef={characterDialog}
+        spellClasses={spellClasses}
         onAddCharacter={onAddCharacter}
         onRenameCharacter={onRenameCharacter}
         onDeleteCharacter={onDeleteCharacter}
         editingChar={editingChar}
+        formVersion={formVersion}
+        setFormVersion={setFormVersion}
       />
       <button
         type="button"

@@ -80,8 +80,3 @@ export type SpellDetailsView = {
   higher_level?: string;
 };
 
-export type Character = {
-  id: string;
-  name: string;
-  favoriteSpellIds: string[];
-};

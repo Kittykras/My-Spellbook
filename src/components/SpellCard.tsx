@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Spell, SpellDetails } from "../types/spell";
 import { cardDescriptions } from "../data/cardDescriptions";
+import MarkdownContent from "./MarkdownContent";
 
 type SpellCardProps = {
   spell: Spell;
@@ -217,15 +218,17 @@ export default function SpellCard({
             </div>
             <div className="spell-card-body" ref={bodyRef}>
               <div className="spell-card-body-content" ref={contentRef}>
-                <p className="spell-desc">
-                  {description}
-                </p>
+                <MarkdownContent
+                  text={description ?? ""}
+                  className="spell-desc"
+                />
                 {cardDetails.higher_level && (
                   <>
                     <h3 className="higher-lvl-title">At higher levels</h3>
-                    <p className="higher-lvl-desc">
-                      {cardDetails.higher_level}
-                    </p>
+                    <MarkdownContent
+                      text={cardDetails.higher_level ?? ""}
+                      className="higher-lvl-desc"
+                    />
                   </>
                 )}
                 {cardDetails.material && (
