@@ -1699,7 +1699,8 @@ header {
     margin-top: 15px;
   }
 
-  b {
+  b,
+  strong {
     color: $accent;
   }
 
@@ -1797,7 +1798,9 @@ header {
 
   .action,
   .trait {
-    b {
+    b,
+    strong {
+      color: $ink;
       font-style: italic;
     }
   }
@@ -1918,6 +1921,12 @@ header {
       font-size: var(--description-size, 12px);
       line-height: 1.1;
     }
+    .stat-line {
+      b,
+      strong {
+        color: $accent;
+      }
+    }
     .skills {
       text-transform: capitalize;
     }
@@ -1931,6 +1940,10 @@ header {
         text-align: center;
         margin: 0;
         font-size: 12px;
+        b,
+        strong {
+          color: $paper;
+        }
       }
     }
     .ability-grid {
@@ -1985,6 +1998,14 @@ header {
       margin: 0 0 2px;
       text-transform: capitalize;
       border-bottom: 1px solid $gold;
+    }
+    .action,
+    .trait {
+      b,
+      strong {
+        color: $ink;
+        font-style: italic;
+      }
     }
   }
 }

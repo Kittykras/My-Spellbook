@@ -207,7 +207,7 @@ export default function WildShapeDetailsContent({
           <h3 className="traits-title">Traits</h3>
           {wildShape.isCustom ? (
             <MarkdownContent
-              className="custom-description"
+              className="trait"
               text={wildShape.traits}
             />
           ) : (
@@ -225,7 +225,7 @@ export default function WildShapeDetailsContent({
           <div className="actions-list">
             {wildShape.isCustom ? (
               <MarkdownContent
-                className="custom-description"
+                className="action"
                 text={wildShape.actions}
               />
             ) : (
