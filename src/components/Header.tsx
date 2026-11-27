@@ -1,3 +1,5 @@
+import LogoutIcon from "../assets/LogoutIcon";
+
 type HeaderProps = {
   userEmail?: string;
   onLogout?: () => void;
@@ -9,8 +11,8 @@ export default function Header({ userEmail, onLogout }: HeaderProps) {
       {userEmail && onLogout && (
         <div className="account-bar">
           <span>{userEmail}</span>
-          <button type="button" className="small-btn" onClick={onLogout}>
-            Log out
+          <button type="button" className="small-btn logout-btn" onClick={onLogout}>
+            <LogoutIcon size={16} />
           </button>
         </div>
       )}
