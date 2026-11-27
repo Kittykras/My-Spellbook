@@ -3,16 +3,14 @@ import { type SubmitEvent } from "react";
 type CardTextEditorFormProps = {
   editingCard: { index: string; text: string };
   setEditingCard: (card: { index: string; text: string } | null) => void;
-  setSavedCardText: (
-    updater: (previous: Record<string, string>) => Record<string, string>,
-  ) => void;
+  onSaveCardText: (spellIndex: string, text: string) => void;
   closeDialog: () => void;
 };
 
 export default function CardTextEditorForm({
   editingCard,
   setEditingCard,
-  setSavedCardText,
+  onSaveCardText,
   closeDialog,
 }: CardTextEditorFormProps) {
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -22,10 +20,7 @@ export default function CardTextEditorForm({
     const trimmedText = text.trim();
     if (!trimmedText) return;
 
-    setSavedCardText((previous) => ({
-      ...previous,
-      [index]: trimmedText,
-    }));
+    onSaveCardText(index, trimmedText);
     setEditingCard(null);
     closeDialog();
   }

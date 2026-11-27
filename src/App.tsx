@@ -5,6 +5,8 @@ import {
   getSpellsByClassFromAPI,
   getBeastsFromAPI,
 } from "./api/request";
+import * as backend from "./api/backend";
+import type { User } from "./api/backend";
 import type {
   Spell,
   SpellDetails,
@@ -28,7 +30,12 @@ import type {
 } from "./types/wildShape";
 import WildShapeSearch from "./components/WildShapeSearch";
 
-function App() {
+type AppProps = {
+  user: User;
+  onLogout: () => void;
+};
+
+function App({ user, onLogout }: AppProps) {
   const [spells, setSpells] = useState<Spell[]>([]);
   const [classSpellIds, setClassSpellIds] = useState<string[]>([]);
   const [spellDetails, setSpellDetails] = useState<SpellDetails>();
@@ -55,37 +62,20 @@ function App() {
   const [wildShapeSortDirection, setWildShapeSortDirection] = useState<
     "asc" | "desc"
   >("asc");
-  const [customSpells, setCustomSpells] = useState<CustomSpell[]>(() => {
-    const savedSpells = localStorage.getItem("spellbook-custom-spells");
-
-    return savedSpells ? JSON.parse(savedSpells) : [];
-  });
+  const [customSpells, setCustomSpells] = useState<CustomSpell[]>([]);
   const [customWildShapes, setCustomWildShapes] = useState<CustomWildShape[]>(
-    () => {
-      const savedWildShapes = localStorage.getItem(
-        "spellbook-custom-wild-shapes",
-      );
-
-      return savedWildShapes ? JSON.parse(savedWildShapes) : [];
-    },
+    [],
   );
-  const [characters, setCharacters] = useState<Character[]>(() => {
-    const savedCharacters = localStorage.getItem("spellbook-characters");
-
-    if (!savedCharacters) return [];
-
-    const parsedCharacters: Character[] = JSON.parse(savedCharacters);
-
-    return parsedCharacters.map((character) => ({
-      ...character,
-      classes: character.classes ?? [],
-      favoriteSpellIds: character.favoriteSpellIds ?? [],
-      favoriteWildShapeKeys: character.favoriteWildShapeKeys ?? [],
-    }));
-  });
-  const [activeCharacterId, setActiveCharacterId] = useState(
-    characters[0]?.id ?? "",
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [cardTexts, setCardTexts] = useState<Record<string, string>>({});
+  const [activeCharacterId, setActiveCharacterId] = useState("");
+  const [isLoadingUserData, setIsLoadingUserData] = useState(true);
+  const [userDataError, setUserDataError] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [legacyLocalData, setLegacyLocalData] = useState(() =>
+    backend.getLegacyLocalData(),
   );
+  const [isImporting, setIsImporting] = useState(false);
   const [spellDetailsByIndex, setSpellDetailsByIndex] = useState<
     Record<string, SpellDetails>
   >({});
@@ -162,10 +152,6 @@ function App() {
     { key: "wisdom", label: "WIS" },
     { key: "charisma", label: "CHA" },
   ] as const;
-
-  const savedFavorites: string[] = JSON.parse(
-    localStorage.getItem("spellbook-favorites") ?? "[]",
-  );
 
   function getRelevance(name: string): number {
     const spellName = name.toLowerCase();
@@ -300,7 +286,7 @@ function App() {
       const spellsWithFavorites: ApiSpellItem[] = result.map((spell) => ({
         ...spell,
         isCustom: false,
-        isFavorite: savedFavorites.includes(spell.index) ? true : false,
+        isFavorite: false,
       }));
       setSpells(spellsWithFavorites);
     } catch (error) {
@@ -441,15 +427,46 @@ function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(
-      "spellbook-custom-spells",
-      JSON.stringify(customSpells),
-    );
-  }, [customSpells]);
+    let cancelled = false;
 
-  useEffect(() => {
-    localStorage.setItem("spellbook-characters", JSON.stringify(characters));
-  }, [characters]);
+    async function loadUserData() {
+      try {
+        const [
+          loadedCharacters,
+          loadedCustomSpells,
+          loadedCustomWildShapes,
+          loadedCardTexts,
+        ] = await Promise.all([
+          backend.fetchCharacters(),
+          backend.fetchCustomSpells(),
+          backend.fetchCustomWildShapes(),
+          backend.fetchCardTexts(),
+        ]);
+
+        if (cancelled) return;
+        setCharacters(loadedCharacters);
+        setCustomSpells(loadedCustomSpells);
+        setCustomWildShapes(loadedCustomWildShapes);
+        setCardTexts(loadedCardTexts);
+        setActiveCharacterId(loadedCharacters[0]?.id ?? "");
+      } catch (error) {
+        console.error("Failed to load your data:", error);
+        if (!cancelled) {
+          setUserDataError(
+            "Could not load your characters and custom content. Please reload the page.",
+          );
+        }
+      } finally {
+        if (!cancelled) setIsLoadingUserData(false);
+      }
+    }
+
+    void loadUserData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -484,13 +501,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(
-      "spellbook-custom-wild-shapes",
-      JSON.stringify(customWildShapes),
-    );
-  }, [customWildShapes]);
-
-  useEffect(() => {
     if (
       !isDruid &&
       (activeTab === "Wild Shapes" || activeTab === "My Wild Shapes")
@@ -503,34 +513,61 @@ function App() {
     setSelectedClasses(activeCharacter?.classes ?? []);
   }, [activeCharacter?.id, activeCharacter?.classes]);
 
+  function persist(request: Promise<unknown>, rollback: () => void) {
+    setSaveError("");
+    request.catch((error: unknown) => {
+      console.error("Failed to save:", error);
+      rollback();
+
+      if (error instanceof backend.ApiError && error.status === 401) {
+        onLogout();
+        return;
+      }
+
+      setSaveError(
+        `Your last change could not be saved${
+          error instanceof Error ? `: ${error.message}` : "."
+        }`,
+      );
+    });
+  }
+
   function toggleFavorite(index: string) {
-    setCharacters((previousCharacters) =>
-      previousCharacters.map((character) => {
-        if (character.id !== activeCharacterId) return character;
+    const character = characters.find((c) => c.id === activeCharacterId);
+    if (!character) return;
 
-        const isFavorite = character.favoriteSpellIds.includes(index);
+    const previousCharacters = characters;
+    const isFavorite = character.favoriteSpellIds.includes(index);
 
-        return {
-          ...character,
-          favoriteSpellIds: isFavorite
-            ? character.favoriteSpellIds.filter((id) => id !== index)
-            : [...character.favoriteSpellIds, index],
-        };
-      }),
+    setCharacters((current) =>
+      current.map((c) =>
+        c.id !== character.id
+          ? c
+          : {
+              ...c,
+              favoriteSpellIds: isFavorite
+                ? c.favoriteSpellIds.filter((id) => id !== index)
+                : [...c.favoriteSpellIds, index],
+            },
+      ),
+    );
+    persist(backend.setFavoriteSpell(character.id, index, !isFavorite), () =>
+      setCharacters(previousCharacters),
     );
   }
 
   function toggleWildShapeFavorite(key: string) {
     if (!activeCharacter) return;
 
-    setCharacters((previousCharacters) =>
-      previousCharacters.map((character) =>
+    const previousCharacters = characters;
+    const isFavorite = activeCharacter.favoriteWildShapeKeys.includes(key);
+
+    setCharacters((current) =>
+      current.map((character) =>
         character.id === activeCharacter.id
           ? {
               ...character,
-              favoriteWildShapeKeys: character.favoriteWildShapeKeys.includes(
-                key,
-              )
+              favoriteWildShapeKeys: isFavorite
                 ? character.favoriteWildShapeKeys.filter(
                     (favoriteKey) => favoriteKey !== key,
                   )
@@ -538,6 +575,10 @@ function App() {
             }
           : character,
       ),
+    );
+    persist(
+      backend.setFavoriteWildShape(activeCharacter.id, key, !isFavorite),
+      () => setCharacters(previousCharacters),
     );
   }
 
@@ -572,24 +613,54 @@ function App() {
       isCustom: true,
       isFavorite: false,
     };
-    setCustomSpells((prevCustomSpells) => [
-      ...prevCustomSpells,
-      customSpellObj,
-    ]);
+    const previousSpells = customSpells;
+
+    setCustomSpells((current) => [...current, customSpellObj]);
+    persist(backend.createCustomSpell(customSpellObj.index, input), () =>
+      setCustomSpells(previousSpells),
+    );
   }
 
   function updateCustomSpell(index: string, input: CustomSpellInput) {
-    setCustomSpells((previousSpells) =>
-      previousSpells.map((spell) =>
+    const previousSpells = customSpells;
+
+    setCustomSpells((current) =>
+      current.map((spell) =>
         spell.index === index ? { ...spell, ...input } : spell,
       ),
+    );
+    persist(backend.updateCustomSpell(index, input), () =>
+      setCustomSpells(previousSpells),
     );
   }
 
   function deleteCustomSpell(index: string) {
-    setCustomSpells((previousSpells) =>
-      previousSpells.filter((spell) => spell.index !== index),
+    const previousSpells = customSpells;
+    const previousCharacters = characters;
+    const previousCardTexts = cardTexts;
+
+    // The server also removes favorites and card text for the deleted spell.
+    setCustomSpells((current) =>
+      current.filter((spell) => spell.index !== index),
     );
+    setCharacters((current) =>
+      current.map((character) => ({
+        ...character,
+        favoriteSpellIds: character.favoriteSpellIds.filter(
+          (id) => id !== index,
+        ),
+      })),
+    );
+    setCardTexts((current) => {
+      const next = { ...current };
+      delete next[index];
+      return next;
+    });
+    persist(backend.deleteCustomSpell(index), () => {
+      setCustomSpells(previousSpells);
+      setCharacters(previousCharacters);
+      setCardTexts(previousCardTexts);
+    });
   }
 
   function addCustomWildShape(input: CustomWildShapeInput) {
@@ -598,31 +669,87 @@ function App() {
       key: `custom-${crypto.randomUUID()}`,
       isCustom: true,
     };
+    const previousWildShapes = customWildShapes;
 
-    setCustomWildShapes((previous) => [...previous, newWildShape]);
+    setCustomWildShapes((current) => [...current, newWildShape]);
+    persist(backend.createCustomWildShape(newWildShape.key, input), () =>
+      setCustomWildShapes(previousWildShapes),
+    );
   }
 
   function updateCustomWildShape(key: string, input: CustomWildShapeInput) {
-    setCustomWildShapes((previous) =>
-      previous.map((wildShape) =>
+    const previousWildShapes = customWildShapes;
+
+    setCustomWildShapes((current) =>
+      current.map((wildShape) =>
         wildShape.key === key ? { ...wildShape, ...input } : wildShape,
       ),
+    );
+    persist(backend.updateCustomWildShape(key, input), () =>
+      setCustomWildShapes(previousWildShapes),
     );
   }
 
   function deleteCustomWildShape(key: string) {
-    setCustomWildShapes((previous) =>
-      previous.filter((wildShape) => wildShape.key !== key),
-    );
+    const previousWildShapes = customWildShapes;
+    const previousCharacters = characters;
 
-    setCharacters((previous) =>
-      previous.map((character) => ({
+    // The server also removes the wild shape from every character's favorites.
+    setCustomWildShapes((current) =>
+      current.filter((wildShape) => wildShape.key !== key),
+    );
+    setCharacters((current) =>
+      current.map((character) => ({
         ...character,
         favoriteWildShapeKeys: character.favoriteWildShapeKeys.filter(
           (favoriteKey) => favoriteKey !== key,
         ),
       })),
     );
+    persist(backend.deleteCustomWildShape(key), () => {
+      setCustomWildShapes(previousWildShapes);
+      setCharacters(previousCharacters);
+    });
+  }
+
+  function saveCardText(spellIndex: string, text: string) {
+    const previousCardTexts = cardTexts;
+
+    setCardTexts((current) => ({ ...current, [spellIndex]: text }));
+    persist(backend.saveCardText(spellIndex, text), () =>
+      setCardTexts(previousCardTexts),
+    );
+  }
+
+  async function importLegacyData() {
+    if (!legacyLocalData) return;
+
+    setIsImporting(true);
+    setSaveError("");
+    try {
+      const imported = await backend.importLocalData(legacyLocalData);
+      const importedCardTexts = await backend.fetchCardTexts();
+
+      setCharacters(imported.characters);
+      setCustomSpells(imported.customSpells);
+      setCustomWildShapes(imported.customWildShapes);
+      setCardTexts(importedCardTexts);
+      if (!activeCharacterId) {
+        setActiveCharacterId(imported.characters[0]?.id ?? "");
+      }
+
+      backend.clearLegacyLocalData();
+      setLegacyLocalData(null);
+    } catch (error) {
+      console.error("Failed to import local data:", error);
+      setSaveError(
+        `Could not import your data${
+          error instanceof Error ? `: ${error.message}` : "."
+        }`,
+      );
+    } finally {
+      setIsImporting(false);
+    }
   }
 
   function clearSearchAndFilters() {
@@ -647,28 +774,46 @@ function App() {
       favoriteSpellIds: [],
       favoriteWildShapeKeys: [],
     };
+    const previousCharacters = characters;
+    const previousActiveCharacterId = activeCharacterId;
 
-    setCharacters((previousCharacters) => [
-      ...previousCharacters,
-      newCharacter,
-    ]);
+    setCharacters((current) => [...current, newCharacter]);
     setActiveCharacterId(newCharacter.id);
+    persist(
+      backend.createCharacter({
+        id: newCharacter.id,
+        name: newCharacter.name,
+        classes: newCharacter.classes,
+      }),
+      () => {
+        setCharacters(previousCharacters);
+        setActiveCharacterId(previousActiveCharacterId);
+      },
+    );
   }
 
   function renameCharacter(id: string, name: string, classes: string[]) {
     const trimmedName = name.trim();
     if (!trimmedName) return;
 
-    setCharacters((previousCharacters) =>
-      previousCharacters.map((character) =>
+    const previousCharacters = characters;
+
+    setCharacters((current) =>
+      current.map((character) =>
         character.id === id
           ? { ...character, name: trimmedName, classes: [...classes] }
           : character,
       ),
     );
+    persist(
+      backend.updateCharacter(id, { name: trimmedName, classes: [...classes] }),
+      () => setCharacters(previousCharacters),
+    );
   }
 
   function deleteCharacter(id: string) {
+    const previousCharacters = characters;
+    const previousActiveCharacterId = activeCharacterId;
     const remainingCharacters = characters.filter(
       (character) => character.id !== id,
     );
@@ -678,12 +823,70 @@ function App() {
     if (activeCharacterId === id) {
       setActiveCharacterId(remainingCharacters[0]?.id ?? "");
     }
+
+    persist(backend.deleteCharacter(id), () => {
+      setCharacters(previousCharacters);
+      setActiveCharacterId(previousActiveCharacterId);
+    });
+  }
+
+  const header = <Header userEmail={user.email} onLogout={onLogout} />;
+
+  if (isLoadingUserData || userDataError) {
+    return (
+      <>
+        {header}
+        <main>
+          {userDataError ? (
+            <p className="error">{userDataError}</p>
+          ) : (
+            <p className="loading">Loading your spellbook…</p>
+          )}
+        </main>
+      </>
+    );
   }
 
   return (
     <>
-      <Header />
+      {header}
       <main>
+        {legacyLocalData && (
+          <div className="app-banner">
+            <p>
+              This browser has characters or spells saved from before you had
+              an account. Import them into your account?
+            </p>
+            <button
+              type="button"
+              className="small-btn"
+              disabled={isImporting}
+              onClick={() => void importLegacyData()}
+            >
+              {isImporting ? "Importing…" : "Import"}
+            </button>
+            <button
+              type="button"
+              className="small-btn"
+              disabled={isImporting}
+              onClick={() => setLegacyLocalData(null)}
+            >
+              Not now
+            </button>
+          </div>
+        )}
+        {saveError && (
+          <div className="app-banner is-error" role="alert">
+            <p>{saveError}</p>
+            <button
+              type="button"
+              className="small-btn"
+              onClick={() => setSaveError("")}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         <CharacterSelect
           activeCharacterId={activeCharacterId}
           activeCharacter={activeCharacter}
@@ -769,6 +972,8 @@ function App() {
               onSaveSpell={addCustomSpell}
               onEditSpell={updateCustomSpell}
               onDeleteSpell={deleteCustomSpell}
+              cardTexts={cardTexts}
+              onSaveCardText={saveCardText}
               hasActiveCharacter={Boolean(activeCharacter)}
               isSpellbook={isSpellbookTab}
               classAbbreviations={classAbbreviations}

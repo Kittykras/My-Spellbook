@@ -2010,3 +2010,103 @@ header {
     }
   }
 }
+
+// Account / auth
+.account-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  max-width: 1164px;
+  margin: 0 auto;
+  padding: 15px 30px 0;
+  color: $muted;
+  font-size: 15px;
+
+  @include mobile {
+    padding: 15px 15px 0;
+  }
+}
+
+.auth-panel {
+  max-width: 420px;
+  margin: 0 auto 60px;
+  padding: 24px;
+  background-color: $paper;
+  border: 1px solid $border;
+  border-radius: 8px;
+
+  h2 {
+    font-family: $font-heading;
+    color: $ink;
+    margin: 0 0 18px;
+  }
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    label {
+      @include field-label;
+    }
+
+    input {
+      @include form-field;
+    }
+
+    .field-help {
+      margin: 6px 0 0;
+      color: $muted;
+      font-size: 13px;
+    }
+
+    .error {
+      color: $error;
+      margin: 0;
+    }
+
+    .button-wrapper {
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button {
+      @include small-button;
+    }
+
+    .link-btn {
+      background: none;
+      border: none;
+      text-decoration: underline;
+      font-weight: 400;
+      color: $muted;
+    }
+  }
+}
+
+.app-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 12px 15px;
+  background-color: $paper;
+  border: 1px solid $border;
+  border-radius: 6px;
+  color: $ink;
+
+  p {
+    margin: 0;
+    flex: 1 1 240px;
+  }
+
+  &.is-error {
+    border-color: $error;
+
+    p {
+      color: $error;
+    }
+  }
+}

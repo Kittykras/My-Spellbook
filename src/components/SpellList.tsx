@@ -1,5 +1,5 @@
 import SpellItem from "./SpellItem";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import type {
   CustomSpell,
   CustomSpellInput,
@@ -39,6 +39,8 @@ type SpellListProps = {
   onSaveSpell: (spell: CustomSpellInput) => void;
   onEditSpell: (index: string, input: CustomSpellInput) => void;
   onDeleteSpell: (index: string) => void;
+  cardTexts: Record<string, string>;
+  onSaveCardText: (spellIndex: string, text: string) => void;
   hasActiveCharacter?: boolean;
   isSpellbook: boolean;
   classAbbreviations: Record<string, string>;
@@ -75,6 +77,8 @@ export default function SpellList({
   onSaveSpell,
   onEditSpell,
   onDeleteSpell,
+  cardTexts,
+  onSaveCardText,
   hasActiveCharacter,
   isSpellbook,
   classAbbreviations,
@@ -89,12 +93,6 @@ export default function SpellList({
   const [editingSpell, setEditingSpell] = useState<CustomSpell | null>(null);
   const [formVersion, setFormVersion] = useState(0);
   const [activeView, setActiveView] = useState("list");
-  const [savedCardText, setSavedCardText] = useState<Record<string, string>>(
-    () => {
-      const saved = localStorage.getItem("spellbook-card-texts");
-      return saved ? JSON.parse(saved) : {};
-    },
-  );
   const [editingCard, setEditingCard] = useState<{
     index: string;
     text: string;
@@ -125,7 +123,7 @@ export default function SpellList({
       toggleFavorite={toggleFavorite}
       hasActiveCharacter={hasActiveCharacter}
       classAbbreviations={classAbbreviations}
-      savedCardText={savedCardText[spell.index]}
+      savedCardText={cardTexts[spell.index]}
       onEditCardText={(index, currentText) =>
         openCardTextDialog(index, currentText)
       }
@@ -142,14 +140,10 @@ export default function SpellList({
       cardTextDialogRef={cardTextDialogRef}
       editingCard={editingCard}
       setEditingCard={setEditingCard}
-      setSavedCardText={setSavedCardText}
+      onSaveCardText={onSaveCardText}
       closeDialog={() => cardTextDialogRef.current?.close()}
     />
   );
-
-  useEffect(() => {
-    localStorage.setItem("spellbook-card-texts", JSON.stringify(savedCardText));
-  }, [savedCardText]);
 
   if (showPrintPreview) {
     return (

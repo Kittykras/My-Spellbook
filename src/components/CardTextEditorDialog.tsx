@@ -5,9 +5,7 @@ type CardTextEditorDialogProps = {
   cardTextDialogRef: RefObject<HTMLDialogElement | null>;
   editingCard: { index: string; text: string } | null;
   setEditingCard: (card: { index: string; text: string } | null) => void;
-  setSavedCardText: (
-    updater: (previous: Record<string, string>) => Record<string, string>,
-  ) => void;
+  onSaveCardText: (spellIndex: string, text: string) => void;
   closeDialog: () => void
 };
 
@@ -15,7 +13,7 @@ export default function CardTextEditorDialog({
   cardTextDialogRef,
   editingCard,
   setEditingCard,
-  setSavedCardText,
+  onSaveCardText,
   closeDialog,
 }: CardTextEditorDialogProps) {
   return (
@@ -43,7 +41,7 @@ export default function CardTextEditorDialog({
           <CardTextEditorForm
             editingCard={editingCard}
             setEditingCard={setEditingCard}
-            setSavedCardText={setSavedCardText}
+            onSaveCardText={onSaveCardText}
             closeDialog={closeDialog}
           />
         )}
