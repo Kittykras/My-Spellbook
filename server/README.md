@@ -40,4 +40,7 @@ Back up by copying `spellbook.db` (or `sqlite3 spellbook.db ".backup backup.db"`
 - `POST /import` — one-time import of the old localStorage data (idempotent)
 
 Everything except `/auth/*` requires the session cookie, and every query is
-scoped to the logged-in user.
+scoped to the logged-in user. The one exception is sharing: `GET /custom-spells`
+and `GET /custom-wild-shapes` also return items other users have shared
+(`isShared: true, isOwn: false`). Those can be favorited but not edited or deleted.
+Send `"isShared": true` in a POST/PUT body to share your own item.

@@ -58,12 +58,17 @@ export type CustomSpellInput = {
   ritual: boolean;
   classes: string[];
   higher_level?: string;
+  /** Visible to every user when true. */
+  isShared?: boolean;
 };
 
 export type CustomSpell = CustomSpellInput & {
   index: string;
   isCustom: true;
   isFavorite: boolean;
+  isShared: boolean;
+  /** False for spells another user has shared; those are read-only. */
+  isOwn: boolean;
 };
 
 export type SpellDetailsView = {

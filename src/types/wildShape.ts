@@ -67,11 +67,16 @@ export type CustomWildShapeInput = Omit<
   skill_bonuses: string;
   traits: string;
   actions: string;
+  /** Visible to every user when true. */
+  isShared?: boolean;
 };
 
 export type CustomWildShape = CustomWildShapeInput & {
   key: string;
   isCustom: true;
+  isShared: boolean;
+  /** False for wild shapes another user has shared; those are read-only. */
+  isOwn: boolean;
 };
 
 export type WildShape = ApiWildShape | CustomWildShape;

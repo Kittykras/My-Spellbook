@@ -1,6 +1,7 @@
 import type { CustomSpell, Spell, SpellDetails } from "../types/spell";
 import type { Dispatch, SetStateAction } from "react";
 import SpellDetailsContent from "./SpellDetailsContent";
+import SharedBadge from "./SharedBadge";
 
 type SpellItemProps = {
   spell: Spell;
@@ -59,6 +60,7 @@ export default function SpellItem({
             aria-expanded={isExpanded}
           >
             {spell.name}
+            {spell.isCustom && <SharedBadge item={spell} />}
             <span className="minus" aria-hidden="true">
               {isExpanded && "-"}
             </span>
@@ -96,22 +98,28 @@ export default function SpellItem({
               {spell.isCustom ? (
                 <>
                   <SpellDetailsContent spellDetails={spell} />
-                  <div className="button-wrapper">
-                    <button
-                      type="button"
-                      className="small-btn"
-                      onClick={() => openCustomSpellDialog(spell)}
-                    >
-                      Edit spell
-                    </button>
-                    <button
-                      type="button"
-                      className="small-btn"
-                      onClick={handleDelete}
-                    >
-                      Delete spell
-                    </button>
-                  </div>
+                  {spell.isOwn ? (
+                    <div className="button-wrapper">
+                      <button
+                        type="button"
+                        className="small-btn"
+                        onClick={() => openCustomSpellDialog(spell)}
+                      >
+                        Edit spell
+                      </button>
+                      <button
+                        type="button"
+                        className="small-btn"
+                        onClick={handleDelete}
+                      >
+                        Delete spell
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="notice">
+                      Shared by another player. Only they can edit it.
+                    </p>
+                  )}
                 </>
               ) : isLoadingDetails ? (
                 <p className="loading">Loading spell details…</p>

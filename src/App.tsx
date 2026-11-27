@@ -612,6 +612,8 @@ function App({ user, onLogout }: AppProps) {
       index: `custom-${crypto.randomUUID()}`,
       isCustom: true,
       isFavorite: false,
+      isShared: input.isShared ?? false,
+      isOwn: true,
     };
     const previousSpells = customSpells;
 
@@ -668,6 +670,8 @@ function App({ user, onLogout }: AppProps) {
       ...input,
       key: `custom-${crypto.randomUUID()}`,
       isCustom: true,
+      isShared: input.isShared ?? false,
+      isOwn: true,
     };
     const previousWildShapes = customWildShapes;
 

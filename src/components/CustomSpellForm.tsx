@@ -57,6 +57,7 @@ export default function CustomSpellForm({
     const higher_level = String(
       formData.get("custom-spell-higher-levels") ?? "",
     ).trim();
+    const isShared = formData.has("custom-spell-shared");
     const input: CustomSpellInput = {
       name,
       level,
@@ -71,6 +72,7 @@ export default function CustomSpellForm({
       ritual,
       classes,
       higher_level,
+      isShared,
     };
     if (editingSpell) {
       onEditSpell(editingSpell.index, input);
@@ -335,6 +337,22 @@ export default function CustomSpellForm({
         <p id="custom-spell-higher-levels-help" className="field-help">
           Use <code>**text**</code> for bold, <code>*text*</code> for italic,
           and a blank line between paragraphs.
+        </p>
+      </div>
+      <div>
+        <div className="checkbox-wrapper">
+          <input
+            type="checkbox"
+            name="custom-spell-shared"
+            id="custom-spell-shared"
+            aria-describedby="custom-spell-shared-help"
+            defaultChecked={editingSpell?.isShared ?? false}
+          />
+          <label htmlFor="custom-spell-shared">Share with everyone</label>
+        </div>
+        <p id="custom-spell-shared-help" className="field-help">
+          All users will be able to see this spell and add it to their
+          spellbooks. Only you can edit or delete it.
         </p>
       </div>
       <div className="button-wrapper">

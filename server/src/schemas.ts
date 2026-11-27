@@ -17,15 +17,25 @@ export const customSpellInputSchema = z.looseObject({
   description: z.string().max(20000).optional(),
   classes: z.array(z.string().max(50)).max(20).optional(),
   components: z.array(z.string().max(20)).max(10).optional(),
+  isShared: z.boolean().optional(),
 });
 
 export const customWildShapeInputSchema = z.looseObject({
   name: z.string().trim().min(1).max(200),
   challenge_rating: z.number().min(0).max(30),
+  isShared: z.boolean().optional(),
 });
 
 // Fields that are derived on read and must never be stored inside `data`.
-const DERIVED_FIELDS = ["index", "key", "isCustom", "isFavorite"];
+// (`isShared` has its own column.)
+const DERIVED_FIELDS = [
+  "index",
+  "key",
+  "isCustom",
+  "isFavorite",
+  "isShared",
+  "isOwn",
+];
 
 export function toStoredData(input: Record<string, unknown>): string {
   const copy = { ...input };

@@ -1,6 +1,7 @@
 import type { Character } from "../types/character";
 import type { CustomWildShape, WildShape } from "../types/wildShape";
 import WildShapeDetailsContent from "./WildShapeDetailsContent";
+import SharedBadge from "./SharedBadge";
 import { formatChallengeRating } from "../utils/formats";
 
 type WildShapeItemProps = {
@@ -29,6 +30,7 @@ export default function WildShapeItem({
         <td className="wild-shape-name">
           <button onClick={onToggleDetails} aria-expanded={isExpanded}>
             {wildShape.name}
+            {wildShape.isCustom && <SharedBadge item={wildShape} />}
             <span className="minus" aria-hidden="true">
               {isExpanded && "-"}
             </span>
@@ -52,7 +54,12 @@ export default function WildShapeItem({
           <td colSpan={3}>
             <section className="wild-shape-details">
               <WildShapeDetailsContent wildShape={wildShape} />
-              {wildShape.isCustom && (
+              {wildShape.isCustom && !wildShape.isOwn && (
+                <p className="notice">
+                  Shared by another player. Only they can edit it.
+                </p>
+              )}
+              {wildShape.isCustom && wildShape.isOwn && (
                 <div className="button-wrapper custom-wild-shape-edit-btn">
                   <button
                     type="button"

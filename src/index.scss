@@ -2110,3 +2110,16 @@ header {
     }
   }
 }
+
+.shared-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border: 1px solid $gold;
+  border-radius: 999px;
+  color: $muted;
+  font-size: 12px;
+  font-weight: 400;
+  vertical-align: middle;
+  white-space: nowrap;
+}

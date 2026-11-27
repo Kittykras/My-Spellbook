@@ -60,6 +60,14 @@ those belong to SQLite.
 What is stored per user: characters (name, classes), each character's favorite
 spells and wild shapes, custom spells, custom wild shapes, and custom card texts.
 
+## Sharing custom spells and wild shapes
+
+Custom spells and wild shapes are private by default. Tick **Share with everyone**
+in the form to make one visible to all users. Shared items get a **Shared** badge
+for you and a **Community** badge for others. Other users can view a shared item,
+favorite it and give it their own card text, but only its creator can edit or delete
+it. Unsharing hides it again; deleting it also removes it from everyone's favorites.
+
 ## Moving data from the old version
 
 Earlier versions saved everything in the browser's `localStorage`. After logging in

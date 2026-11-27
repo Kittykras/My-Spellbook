@@ -331,7 +331,7 @@ export default function WildShapeList({
                     }
                     activeCharacter={activeCharacter}
                     openCustomWildShapeDialog={() => {
-                      if (wildShape.isCustom) {
+                      if (wildShape.isCustom && wildShape.isOwn) {
                         handleToggleAddWildShape(wildShape);
                       }
                     }}

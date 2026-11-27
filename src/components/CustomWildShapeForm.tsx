@@ -98,6 +98,7 @@ export default function CustomWildShapeForm({
         getText("darkvision") === "" ? null : getNumber("darkvision"),
       traits: getText("traits"),
       actions: getText("actions"),
+      isShared: formData.has("custom-wild-shape-shared"),
     };
     if (editingWildShape) {
       onEditWildShape(editingWildShape.key, input);
@@ -397,6 +398,22 @@ export default function CustomWildShapeForm({
         <p id="custom-wild-shape-actions-help" className="field-help">
           Use <code>**text**</code> for bold, <code>*text*</code> for italic,
           and a blank line between paragraphs.
+        </p>
+      </div>
+      <div>
+        <div className="checkbox-wrapper">
+          <input
+            type="checkbox"
+            name="custom-wild-shape-shared"
+            id="custom-wild-shape-shared"
+            aria-describedby="custom-wild-shape-shared-help"
+            defaultChecked={editingWildShape?.isShared ?? false}
+          />
+          <label htmlFor="custom-wild-shape-shared">Share with everyone</label>
+        </div>
+        <p id="custom-wild-shape-shared-help" className="field-help">
+          All users will be able to see this wild shape and save it for their
+          characters. Only you can edit or delete it.
         </p>
       </div>
       <div className="button-wrapper">
